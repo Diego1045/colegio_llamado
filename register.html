@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro por Invitación - Colegio Albert Einstein</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#1e40af',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .dark {
+            color-scheme: dark;
+        }
+        .dark body {
+            background-color: #1a1a1a;
+            color: #FFFFFF;
+        }
+        .dark .bg-white {
+            background-color: #2d2d2d;
+        }
+        .dark .text-gray-800 {
+            color: #FFFFFF;
+        }
+        .dark .border-gray-200 {
+            border-color: #404040;
+        }
+        .dark .bg-gray-50 {
+            background-color: #333333;
+        }
+        .dark .text-gray-500 {
+            color: #FFFFFF;
+        }
+        .dark .text-gray-600 {
+            color: #FFFFFF;
+        }
+        .dark .bg-gray-100 {
+            background-color: #404040;
+        }
+        .dark .hover\:bg-gray-100:hover {
+            background-color: #4d4d4d;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="fixed top-4 right-4">
+        <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+            <i class="fas fa-sun text-yellow-500 dark:hidden"></i>
+            <i class="fas fa-moon text-blue-300 hidden dark:block"></i>
+        </button>
+    </div>
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-school text-3xl"></i>
+                    <h1 class="text-2xl font-bold">Colegio Albert Einstein</h1>
+                </div>
+                <a href="index.html" class="text-white hover:text-blue-200 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al inicio
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Invitation Code Section -->
+        <section id="invitationSection" class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+            <div class="text-center mb-6">
+                <i class="fas fa-envelope text-5xl text-blue-500 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Registro por Invitación</h2>
+                <p class="text-gray-600 mt-2">Ingresa el código de invitación que recibiste por correo electrónico</p>
+            </div>
+            <form id="invitationForm" class="space-y-6">
+                <div>
+                    <label for="invitationCode" class="block text-sm font-medium text-gray-700 mb-1">Código de Invitación</label>
+                    <input type="text" id="invitationCode" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Ej: ABC123-XYZ456">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                    Verificar Código
+                </button>
+            </form>
+            <div class="mt-6 text-center space-y-4">
+                <div class="text-sm text-gray-600">
+                    <p>¿No recibiste tu código de invitación?</p>
+                    <a href="#" class="text-blue-600 hover:underline">Contacta al colegio</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registration Form (Hidden by default) -->
+        <section id="registrationSection" class="hidden max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+            <div class="text-center mb-6">
+                <i class="fas fa-user-plus text-5xl text-blue-500 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Completa tu Registro</h2>
+                <p class="text-gray-600 mt-2">Por favor, completa la siguiente información</p>
+            </div>
+            <form id="registrationForm" class="space-y-6">
+                <div>
+                    <label for="regName" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                    <input type="text" id="regName" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                    <input type="email" id="regEmail" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="regPassword" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="regConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                    <input type="password" id="regConfirmPassword" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div id="childrenFields" class="space-y-4">
+                    <div class="child-field border p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-800 mb-3">Hijo/a #1</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                                <input type="text" name="childName[]" required 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Grado</label>
+                                <select name="childGrade[]" required 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Selecciona un grado</option>
+                                    <option value="Prejardín">Prejardín</option>
+                                    <option value="Preescolar">Preescolar</option>
+                                    <option value="1°">1°</option>
+                                    <option value="2°">2°</option>
+                                    <option value="3°">3°</option>
+                                    <option value="4°">4°</option>
+                                    <option value="5°">5°</option>
+                                    <option value="6°">6°</option>
+                                    <option value="7°">7°</option>
+                                    <option value="8°">8°</option>
+                                    <option value="9°">9°</option>
+                                    <option value="10°">10°</option>
+                                    <option value="11°">11°</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="addChildBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300">
+                    <i class="fas fa-plus mr-2"></i> Agregar Otro Hijo/a
+                </button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                    Completar Registro
+                </button>
+            </form>
+        </section>
+
+        <!-- Success Message (Hidden by default) -->
+        <div id="successMessage" class="hidden max-w-md mx-auto bg-green-50 border-l-4 border-green-400 p-4 mb-8">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700">
+                        ¡Registro completado con éxito! Serás redirigido a la página de inicio de sesión.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 border-t border-gray-200 py-6 mt-12">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2023 Colegio Albert Einstein. Todos los derechos reservados.</p>
+            <p class="mt-2 text-sm">Sistema de salida escolar seguro</p>
+        </div>
+    </footer>
+
+    <script>
+        // Load invitation codes from file
+        let validInvitationCodes = [];
+        let usedCodes = JSON.parse(localStorage.getItem('usedCodes') || '[]');
+        
+        async function loadInvitationCodes() {
+            return new Promise((resolve) => {
+                try {
+                    // Cargar códigos desde localStorage
+                    const storedCodes = localStorage.getItem('invitationCodes');
+                    if (storedCodes) {
+                        const allCodes = JSON.parse(storedCodes);
+                        // Filtrar solo los códigos disponibles
+                        validInvitationCodes = allCodes
+                            .filter(codeData => codeData.status === 'Disponible')
+                            .map(codeData => codeData.code);
+                    } else {
+                        validInvitationCodes = [];
+                    }
+                    
+                    console.log('Códigos válidos:', validInvitationCodes);
+                    resolve();
+                } catch (error) {
+                    console.error('Error loading invitation codes:', error);
+                    validInvitationCodes = [];
+                    resolve();
+                }
+            });
+        }
+
+        // DOM Elements
+        const invitationSection = document.getElementById('invitationSection');
+        const registrationSection = document.getElementById('registrationSection');
+        const invitationForm = document.getElementById('invitationForm');
+        const registrationForm = document.getElementById('registrationForm');
+        const successMessage = document.getElementById('successMessage');
+        const addChildBtn = document.getElementById('addChildBtn');
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', loadInvitationCodes);
+        invitationForm.addEventListener('submit', handleInvitationCode);
+        registrationForm.addEventListener('submit', handleRegistration);
+        addChildBtn.addEventListener('click', addChildField);
+
+        function handleInvitationCode(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('invitationCode').value.trim();
+            console.log('Código ingresado:', code);
+            
+            // Recargar los códigos válidos antes de verificar
+            loadInvitationCodes().then(() => {
+                console.log('Códigos válidos actualizados:', validInvitationCodes);
+                
+                if (validInvitationCodes.includes(code)) {
+                    // Marcar el código como usado
+                    const storedCodes = JSON.parse(localStorage.getItem('invitationCodes') || '[]');
+                    const updatedCodes = storedCodes.map(codeData => {
+                        if (codeData.code === code) {
+                            return { ...codeData, status: 'Usado' };
+                        }
+                        return codeData;
+                    });
+                    localStorage.setItem('invitationCodes', JSON.stringify(updatedCodes));
+                    
+                    // Mostrar formulario de registro
+                    invitationSection.classList.add('hidden');
+                    registrationSection.classList.remove('hidden');
+                } else {
+                    alert('Código de invitación inválido o ya utilizado. Por favor verifica el código e intenta nuevamente.');
+                }
+            });
+        }
+
+        function addChildField() {
+            const childrenFields = document.getElementById('childrenFields');
+            const childCount = childrenFields.children.length + 1;
+            
+            const newChildField = document.createElement('div');
+            newChildField.className = 'child-field border p-4 rounded-lg';
+            newChildField.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-medium text-gray-800">Hijo/a #${childCount}</h3>
+                    <button type="button" class="remove-child-btn text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                        <input type="text" name="childName[]" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Grado</label>
+                        <select name="childGrade[]" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Selecciona un grado</option>
+                            <option value="Prejardín">Prejardín</option>
+                            <option value="Preescolar">Preescolar</option>
+                            <option value="1°">1°</option>
+                            <option value="2°">2°</option>
+                            <option value="3°">3°</option>
+                            <option value="4°">4°</option>
+                            <option value="5°">5°</option>
+                            <option value="6°">6°</option>
+                            <option value="7°">7°</option>
+                            <option value="8°">8°</option>
+                            <option value="9°">9°</option>
+                            <option value="10°">10°</option>
+                            <option value="11°">11°</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            
+            childrenFields.appendChild(newChildField);
+            
+            // Add event listener to remove button
+            newChildField.querySelector('.remove-child-btn').addEventListener('click', function() {
+                newChildField.remove();
+            });
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+            
+            // Get children data
+            const children = [];
+            const childNames = document.getElementsByName('childName[]');
+            const childGrades = document.getElementsByName('childGrade[]');
+            
+            for (let i = 0; i < childNames.length; i++) {
+                if (childNames[i].value.trim() !== '') {  // Solo agregar hijos con nombre
+                    children.push({
+                        id: Date.now() + i,
+                        name: childNames[i].value,
+                        grade: childGrades[i].value,
+                        called: false
+                    });
+                }
+            }
+            
+            // Get existing registered parents
+            const registeredParents = JSON.parse(localStorage.getItem('registeredParents') || '[]');
+            
+            // Check if email already exists
+            if (registeredParents.some(parent => parent.email === email)) {
+                alert('El correo electrónico ya está registrado. Por favor usa otro correo.');
+                return;
+            }
+            
+            // Create new parent object with the correct structure
+            const newParent = {
+                email: email,
+                password: password,
+                name: name,
+                children: children
+            };
+            
+            // Add new parent to the list
+            registeredParents.push(newParent);
+            
+            // Save to localStorage
+            localStorage.setItem('registeredParents', JSON.stringify(registeredParents));
+            
+            // Show success message
+            registrationSection.classList.add('hidden');
+            successMessage.classList.remove('hidden');
+            
+            // Redirect to login page after 3 seconds
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 3000);
+        }
+
+        // Función para cambiar el tema
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Cargar tema guardado
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Agregar evento al botón de tema
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        });
+    </script>
+</body>
+</html> 
