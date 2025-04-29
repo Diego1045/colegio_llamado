@@ -1,24 +1,22 @@
 <template>
-  <div class="login">
-    <h1>Iniciar Sesión</h1>
-    <form @submit.prevent="handleLogin">
+  <div class="reset-password">
+    <h1>Recuperar Contraseña</h1>
+    <form @submit.prevent="handleResetPassword">
       <div class="form-group">
         <label for="email">Correo Electrónico:</label>
         <input type="email" id="email" v-model="email" required>
       </div>
-      <div class="form-group">
-        <label for="password">Contraseña:</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
       <div v-if="error" class="error-message">
         {{ error }}
       </div>
+      <div v-if="success" class="success-message">
+        Se ha enviado un enlace para restablecer tu contraseña a tu correo electrónico.
+      </div>
       <button type="submit" :disabled="loading">
-        {{ loading ? 'Cargando...' : 'Iniciar Sesión' }}
+        {{ loading ? 'Cargando...' : 'Enviar enlace' }}
       </button>
       <div class="links">
-        <router-link to="/reset-password">¿Olvidaste tu contraseña?</router-link>
-        <router-link to="/register">¿No tienes cuenta? Regístrate</router-link>
+        <router-link to="/login">Volver al inicio de sesión</router-link>
       </div>
     </form>
   </div>
@@ -26,31 +24,26 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-const router = useRouter()
 const authStore = useAuthStore()
-
 const email = ref('')
-const password = ref('')
+const success = ref(false)
 const error = computed(() => authStore.getError)
 const loading = computed(() => authStore.isLoading)
 
-const handleLogin = async () => {
+const handleResetPassword = async () => {
   try {
-    await authStore.signIn(email.value, password.value)
-    if (authStore.isAuthenticated) {
-      router.push('/dashboard')
-    }
+    await authStore.resetPassword(email.value)
+    success.value = true
   } catch (err) {
-    console.error('Error en el login:', err)
+    console.error('Error al enviar el enlace:', err)
   }
 }
 </script>
 
 <style scoped>
-.login {
+.reset-password {
   max-width: 400px;
   margin: 0 auto;
   padding: 20px;
@@ -98,11 +91,14 @@ button:disabled {
   text-align: center;
 }
 
+.success-message {
+  color: #42b983;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 .links {
   margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   text-align: center;
 }
 
@@ -114,4 +110,4 @@ button:disabled {
 .links a:hover {
   text-decoration: underline;
 }
-</style>
+</style> 

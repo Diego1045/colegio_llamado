@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const routes = [
   {
@@ -20,9 +21,39 @@ const routes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('../views/ResetPassword.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/director',
     name: 'Director',
     component: () => import('../views/Director.vue'),
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('../views/Dashboard.vue'),
+    meta: { requiresAuth: true, role: 'padre' }
+  },
+  {
+    path: '/perfil',
+    name: 'Perfil',
+    component: () => import('../views/Perfil.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/estudiantes',
+    name: 'Estudiantes',
+    component: () => import('../views/Estudiantes.vue'),
+    meta: { requiresAuth: true, role: 'padre' }
+  },
+  {
+    path: '/registros',
+    name: 'Registros',
+    component: () => import('../views/Registros.vue'),
     meta: { requiresAuth: true }
   }
 ]
@@ -32,15 +63,29 @@ const router = createRouter({
   routes
 })
 
-// Guard de navegación
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+// Guard de navegación mejorado
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
   
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-  } else {
-    next()
+  // Si la ruta requiere autenticación
+  if (to.meta.requiresAuth) {
+    // Verificar si el usuario está autenticado
+    if (!authStore.isAuthenticated) {
+      next('/login')
+      return
+    }
+
+    // Verificar si la ruta requiere un rol específico
+    if (to.meta.role) {
+      const userRole = authStore.user?.user_metadata?.role
+      if (userRole !== to.meta.role) {
+        next('/')
+        return
+      }
+    }
   }
+
+  next()
 })
 
 export default router
