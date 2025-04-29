@@ -1,18 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import LoginForm from '../components/LoginForm.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: () => import('../views/Home.vue'),
-    meta: { requiresAuth: false }
+    redirect: '/login'
   },
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../views/Login.vue'),
-    meta: { requiresAuth: false }
+    component: LoginForm
   },
   {
     path: '/register',
@@ -36,7 +34,7 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('../views/Dashboard.vue'),
-    meta: { requiresAuth: true, role: 'padre' }
+    meta: { requiresAuth: true }
   },
   {
     path: '/perfil',
@@ -63,29 +61,16 @@ const router = createRouter({
   routes
 })
 
-// Guard de navegación mejorado
+// Guard de navegación
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+  await authStore.checkAuth()
   
-  // Si la ruta requiere autenticación
-  if (to.meta.requiresAuth) {
-    // Verificar si el usuario está autenticado
-    if (!authStore.isAuthenticated) {
-      next('/login')
-      return
-    }
-
-    // Verificar si la ruta requiere un rol específico
-    if (to.meta.role) {
-      const userRole = authStore.user?.user_metadata?.role
-      if (userRole !== to.meta.role) {
-        next('/')
-        return
-      }
-    }
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
   }
-
-  next()
 })
 
 export default router
