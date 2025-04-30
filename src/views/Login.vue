@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -36,6 +36,13 @@ const email = ref('')
 const password = ref('')
 const error = computed(() => authStore.getError)
 const loading = computed(() => authStore.isLoading)
+
+// Verificar si el usuario ya está autenticado al montar el componente
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    router.push('/dashboard')
+  }
+})
 
 const handleLogin = async () => {
   try {
