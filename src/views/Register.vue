@@ -6,20 +6,6 @@
         <i class="fas fa-moon text-blue-300 hidden dark:block"></i>
       </button>
     </div>
-    <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex justify-between items-center">
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-school text-3xl"></i>
-            <h1 class="text-2xl font-bold">Colegio Albert Einstein</h1>
-          </div>
-          <router-link to="/" class="text-white hover:text-blue-200 transition">
-            <i class="fas fa-arrow-left mr-2"></i>Volver al inicio
-          </router-link>
-        </div>
-      </div>
-    </header>
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
@@ -133,13 +119,6 @@
       </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-100 border-t border-gray-200 py-6 mt-12">
-      <div class="container mx-auto px-4 text-center text-gray-600">
-        <p>© 2023 Colegio Albert Einstein. Todos los derechos reservados.</p>
-        <p class="mt-2 text-sm">Sistema de salida escolar seguro</p>
-      </div>
-    </footer>
   </div>
 </template>
 

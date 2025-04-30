@@ -3,42 +3,42 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export { supabase }
 
 // Funciones de autenticación
 export const auth = {
   // Iniciar sesión con email y contraseña
-  async signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     return { data, error }
   },
 
   // Registrarse con email y contraseña
-  async signUp(email, password) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
+  signUp: async (email, password) => {
+    const { data, error } = await supabase.auth.signUp({ email, password })
     return { data, error }
   },
 
   // Cerrar sesión
-  async signOut() {
+  signOut: async () => {
     const { error } = await supabase.auth.signOut()
     return { error }
   },
 
   // Recuperar contraseña
-  async resetPassword(email) {
+  resetPassword: async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email)
     return { data, error }
   },
 
   // Obtener usuario actual
-  async getCurrentUser() {
+  getCurrentUser: async () => {
     const { data: { user }, error } = await supabase.auth.getUser()
     return { user, error }
   }

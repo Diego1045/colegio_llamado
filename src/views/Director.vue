@@ -12,33 +12,6 @@
       </button>
     </div>
 
-    <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-shield text-3xl" aria-hidden="true"></i>
-            <h1 class="text-2xl font-bold">Panel de Administración</h1>
-          </div>
-          <nav class="flex flex-wrap justify-center space-x-4">
-            <router-link 
-              to="/perfil" 
-              class="text-white hover:text-blue-200 transition flex items-center"
-              aria-label="Mi Perfil"
-            >
-              <i class="fas fa-user mr-2" aria-hidden="true"></i>Mi Perfil
-            </router-link>
-            <button 
-              @click="handleLogout" 
-              class="text-white hover:text-blue-200 transition flex items-center"
-              aria-label="Cerrar Sesión"
-            >
-              <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>Cerrar Sesión
-            </button>
-          </nav>
-        </div>
-      </div>
-    </header>
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">

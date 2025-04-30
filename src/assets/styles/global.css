@@ -102,16 +102,21 @@ body {
 }
 
 /* Espaciado */
-.space-y-4 > * + * {
+.space-y-4>*+* {
   margin-top: 1rem;
 }
 
-.space-x-4 > * + * {
+.space-x-4>*+* {
   margin-left: 1rem;
 }
 
 /* Tipografía */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.25;
   margin-bottom: 0.5em;
@@ -291,4 +296,4 @@ h3 {
     --bg-secondary: #111827;
     --border-color: #374151;
   }
-} 
+}

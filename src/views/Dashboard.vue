@@ -1,32 +1,25 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <nav class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex">
-            <div class="flex-shrink-0 flex items-center">
-              <h1 class="text-xl font-bold">Dashboard</h1>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <button
-              @click="handleLogout"
-              class="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <!-- Main Content -->
+    <main class=" mx-auto px-4 py-8">
+      <!-- Welcome Message -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+          Bienvenido, {{ user?.user_metadata?.nombre || 'Padre/Madre' }}
+        </h2>
+        <p class="text-gray-600 dark:text-gray-300">
+          Aquí puedes gestionar la salida de tus hijos cuando estés cerca del colegio.
+        </p>
       </div>
-    </nav>
 
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div class="px-4 py-6 sm:px-0">
-        <div class="border-4 border-dashed border-gray-200 rounded-lg h-96 p-4">
-          <h2 class="text-2xl font-bold mb-4">Bienvenido, {{ userProfile?.nombre }}</h2>
-          <p class="text-gray-600">Rol: {{ userProfile?.role }}</p>
-        </div>
-      </div>
+      <!-- Geolocation Status -->
+      <GeolocationStatus ref="geolocationStatus" />
+
+      <!-- Children List -->
+      <ChildrenList />
+
+      <!-- Schedule Info -->
+      <ScheduleInfo />
     </main>
   </div>
 </template>
@@ -34,24 +27,34 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
+import { useAuthStore } from '../stores/auth'
+import GeolocationStatus from '../components/GeolocationStatus.vue'
+import ChildrenList from '../components/ChildrenList.vue'
+import ScheduleInfo from '../components/ScheduleInfo.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const userProfile = ref(null)
+const user = ref(null)
+const geolocationStatus = ref(null)
 
 onMounted(async () => {
-  if (authStore.profile) {
-    userProfile.value = authStore.profile
-  }
+  user.value = authStore.user
 })
 
-async function handleLogout() {
-  try {
-    await authStore.logout()
-    router.push('/login')
-  } catch (error) {
-    console.error('Error al cerrar sesión:', error)
-  }
+const handleLogout = async () => {
+  await authStore.signOut()
+  router.push('/login')
 }
-</script> 
+</script>
+
+<style>
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+</style>

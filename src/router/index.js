@@ -64,8 +64,12 @@ const router = createRouter({
 // Guard de navegación
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-  await authStore.checkAuth()
-  
+
+  // Inicializar la autenticación si no se ha hecho
+  if (!authStore.user) {
+    await authStore.initialize()
+  }
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else {
