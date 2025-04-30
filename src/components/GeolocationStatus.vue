@@ -27,9 +27,10 @@ const locationStatus = ref('Esperando acceso a la ubicación...')
 const watchId = ref(null)
 
 // School coordinates (Vía Bocono area)
+//7.8883487,-72.50237
 const schoolLocation = {
-  lat: 7.8753884,
-  lng: -72.4691265
+  lat: 7.8883487,
+  lng: -72.50237
 }
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
