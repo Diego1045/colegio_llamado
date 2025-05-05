@@ -145,22 +145,13 @@
       <section class="mb-8">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-2 sm:space-y-0">
           <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Gestión de Usuarios</h2>
-          <div class="flex space-x-2">
-            <router-link 
-              to="/padres"
-              class="btn btn-secondary"
-              aria-label="Gestionar padres"
-            >
-              <i class="fas fa-users mr-2" aria-hidden="true"></i>Gestionar Padres
-            </router-link>
-            <button 
-              @click="mostrarFormularioUsuario = true"
-              class="btn btn-primary"
-              aria-label="Agregar nuevo usuario"
-            >
-              <i class="fas fa-plus mr-2" aria-hidden="true"></i>Nuevo Usuario
-            </button>
-          </div>
+          <button 
+            @click="mostrarFormularioUsuario = true"
+            class="btn btn-primary"
+            aria-label="Agregar nuevo usuario"
+          >
+            <i class="fas fa-plus mr-2" aria-hidden="true"></i>Nuevo Usuario
+          </button>
         </div>
         <div class="card">
           <div class="overflow-x-auto">
