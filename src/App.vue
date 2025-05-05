@@ -17,6 +17,13 @@ export default {
       authStore: useAuthStore()
     }
   },
+  computed: {
+    shouldHideHeader() {
+      // Rutas donde queremos ocultar el encabezado principal
+      const routesWithoutHeader = ['/padres', '/director']
+      return routesWithoutHeader.includes(this.$route.path)
+    }
+  },
   methods: {
     toggleTheme() {
       this.isDark = !this.isDark
@@ -55,7 +62,7 @@ export default {
     </div>
 
     <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
+    <header v-if="!shouldHideHeader" class="bg-blue-600 text-white shadow-lg">
       <div class="container mx-auto px-4 py-6">
         <div class="flex justify-between items-center">
           <div class="flex items-center space-x-3">
@@ -98,7 +105,7 @@ export default {
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6 mt-12">
+    <footer v-if="!shouldHideHeader" class="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6 mt-12">
       <div class="container mx-auto px-4 text-center text-gray-600 dark:text-gray-400">
         <p>© 2023 Colegio Albert Einstein. Todos los derechos reservados.</p>
         <p class="mt-2 text-sm">Sistema de salida escolar seguro</p>

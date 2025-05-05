@@ -106,9 +106,10 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #f9f9f9;
+  color: #213547;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, background-color 0.25s, color 0.25s;
 }
 
 button:hover {
@@ -120,6 +121,11 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.dark button {
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
+}
+
 .card {
   padding: 2em;
 }
@@ -127,6 +133,66 @@ button:focus-visible {
 #app {
   text-align: center;
   width: 100%;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+
+  a:hover {
+    color: #747bff;
+  }
+
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+input,
+select,
+textarea {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 400;
+  font-family: inherit;
+  background-color: #ffffff;
+  color: #213547;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #2d2d2d;
+  color: rgba(255, 255, 255, 0.87);
+  border-color: #4b5563;
+}
+
+/* Estilos específicos para campos de búsqueda */
+input[type="search"],
+input[placeholder*="Buscar"] {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  border-color: #d1d5db;
+}
+
+.dark input[type="search"],
+.dark input[placeholder*="Buscar"] {
+  background-color: #2d2d2d;
+  color: #ffffff;
+  border-color: #4b5563;
 }
 
 @media (prefers-color-scheme: light) {
