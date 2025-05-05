@@ -77,6 +77,7 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => !!state.user,
     isLoading: (state) => state.loading,
-    getError: (state) => state.error
+    getError: (state) => state.error,
+    isAdmin: (state) => state.user?.user_metadata?.role === 'admin'
   }
 }) 
