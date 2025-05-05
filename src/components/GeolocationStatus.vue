@@ -73,7 +73,7 @@ const checkGeolocation = () => {
           schoolLocation.lat, schoolLocation.lng
         )
         
-        isWithinSchoolZone.value = distance <= 50
+        isWithinSchoolZone.value = distance <= 4000
         
         locationStatus.value = isWithinSchoolZone.value
           ? `Estás dentro del área de recogida (${Math.round(distance)} m)`

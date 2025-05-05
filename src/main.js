@@ -11,6 +11,19 @@ import { useAuthStore } from './stores/auth'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
 
+// Obtener el entorno de la aplicación
+const APP_ENV = import.meta.env.VITE_APP_ENV || 'production'
+const APP_NAME = import.meta.env.VITE_APP_NAME || 'Colegio Llamado'
+
+console.log(`Iniciando aplicación: ${APP_NAME}`)
+console.log(`Entorno: ${APP_ENV}`)
+
+// Configuración específica para entorno local
+if (APP_ENV === 'local') {
+    console.log('Modo de desarrollo local activado - Acceso sin restricciones a todas las rutas')
+    console.log('Nota: Aunque estamos en modo local, la aplicación sigue conectándose a Supabase para operaciones de datos')
+}
+
 const app = createApp(App)
 const pinia = createPinia()
 

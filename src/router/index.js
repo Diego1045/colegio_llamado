@@ -3,6 +3,9 @@ import { useAuthStore } from '../stores/auth'
 import { supabase } from '../supabase'
 import LoginForm from '../components/LoginForm.vue'
 
+// Obtener el entorno de la aplicación desde las variables de entorno
+const APP_ENV = import.meta.env.VITE_APP_ENV || 'production'
+
 const routes = [
   {
     path: '/',
@@ -60,6 +63,12 @@ const routes = [
     name: 'Registros',
     component: () => import('../views/Registros.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/anuncios',
+    name: 'Anuncios',
+    component: () => import('../views/Anuncios.vue'),
+    meta: { requiresAuth: true, role: 'admin' }
   }
 ]
 
@@ -83,6 +92,14 @@ router.beforeEach(async (to, from, next) => {
   console.log('Rol en app metadata:', authStore.user?.app_metadata?.role)
   console.log('Requiere Auth:', to.meta.requiresAuth)
   console.log('Rol requerido:', to.meta.role)
+  console.log('Entorno de la aplicación:', APP_ENV)
+
+  // En entorno local, permitir acceso a todas las rutas sin restricciones
+  if (APP_ENV === 'local') {
+    console.log('Entorno local: Permitiendo acceso a todas las rutas')
+    next()
+    return
+  }
 
   // Verificar si el usuario está autenticado cuando la ruta lo requiere
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {

@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 import { seedUsers } from './usersSeeder.js'
+import actualizarRegistrosSalida from './actualizarRegistrosSalida.js'
 
 // Obtener el directorio actual
 const __filename = fileURLToPath(import.meta.url)
@@ -13,8 +14,16 @@ dotenv.config({ path: resolve(__dirname, '../../.env') })
 async function runSeeders() {
     try {
         console.log('Iniciando seeders...')
+
+        // Ejecutar migraciones primero
+        console.log('Ejecutando migraciones...')
+        await actualizarRegistrosSalida()
+
+        // Luego ejecutar seeders
+        console.log('Ejecutando seeders de datos...')
         await seedUsers()
-        console.log('Seeders completados exitosamente')
+
+        console.log('Seeders y migraciones completados exitosamente')
     } catch (error) {
         console.error('Error al ejecutar los seeders:', error)
         process.exit(1)

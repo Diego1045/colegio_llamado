@@ -2,7 +2,10 @@
   <div>
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
       <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Tus Hijos</h3>
-      <div v-if="children.length > 0" class="space-y-4">
+      <div v-if="loading" class="text-center py-8">
+        <p class="text-gray-500 dark:text-gray-400">Cargando...</p>
+      </div>
+      <div v-else-if="children.length > 0" class="space-y-4">
         <div 
           v-for="child in children" 
           :key="child.id"
@@ -10,8 +13,8 @@
         >
           <div class="flex justify-between items-center">
             <div>
-              <h4 class="font-semibold text-lg text-gray-800 dark:text-white">{{ child.nombre }}</h4>
-              <p class="text-gray-600 dark:text-gray-300 text-sm">Grado {{ child.grado }}</p>
+              <h4 class="font-semibold text-lg text-gray-800 dark:text-white">{{ child.nombre }} {{ child.apellido }}</h4>
+              <p class="text-gray-600 dark:text-gray-300 text-sm">Grado {{ child.grado }} - Sección {{ child.seccion }}</p>
             </div>
             <button 
               @click="initiateCall(child)"
@@ -29,6 +32,7 @@
       <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
         <i class="fas fa-child text-4xl mb-2"></i>
         <p>No tienes hijos registrados en el sistema.</p>
+        <p v-if="loadError" class="mt-2 text-red-500">{{ loadError }}</p>
       </div>
     </div>
 
@@ -89,6 +93,8 @@ const showCallModal = ref(false)
 const selectedChild = ref(null)
 const showSuccessNotification = ref(false)
 const successMessage = ref('')
+const loading = ref(false)
+const loadError = ref(null)
 
 const props = defineProps({
   onCallInitiated: {
@@ -103,21 +109,46 @@ onMounted(async () => {
 })
 
 const loadChildren = async () => {
-  if (!authStore.user?.id) {
-    console.error('No hay usuario autenticado')
-    return
-  }
-
+  loading.value = true
+  loadError.value = null
+  
   try {
-    const { data, error } = await supabase
-      .from('estudiantes')
-      .select('*')
+    console.log('Estado de autenticación:', authStore.isAuthenticated)
+    console.log('ID del usuario:', authStore.user?.id)
+    
+    if (!authStore.user?.id) {
+      console.error('No hay usuario autenticado')
+      loadError.value = 'Debes iniciar sesión para ver tus hijos'
+      return
+    }
+    
+    console.log('Consultando hijos para el padre ID:', authStore.user.id)
+    
+    // Cargar hijos utilizando la tabla intermedia padres_estudiantes
+    // usando la misma sintaxis que en Padres.vue
+    const { data: relaciones, error: errorRelaciones } = await supabase
+      .from('padres_estudiantes')
+      .select('estudiante_id, estudiantes(id, nombre, apellido, grado, seccion)')
       .eq('padre_id', authStore.user.id)
-
-    if (error) throw error
-    children.value = data
+    
+    if (errorRelaciones) {
+      console.error('Error al cargar relaciones padre-hijo:', errorRelaciones)
+      throw errorRelaciones
+    }
+    
+    console.log('Relaciones encontradas:', relaciones)
+    
+    // Extraer los datos de los estudiantes desde las relaciones
+    const estudiantesData = relaciones.map(rel => rel.estudiantes)
+    console.log('Datos de estudiantes:', estudiantesData)
+    
+    children.value = estudiantesData || []
+    
   } catch (error) {
-    console.error('Error loading children:', error)
+    console.error('Error cargando lista de hijos:', error)
+    loadError.value = `Error al cargar hijos: ${error.message}`
+  } finally {
+    loading.value = false
   }
 }
 
@@ -139,6 +170,7 @@ const initiateCall = (child) => {
 
 const confirmCall = async () => {
   try {
+    // Añadir un registro con la solicitud de salida
     const { error } = await supabase
       .from('registros_salida')
       .insert([
@@ -153,7 +185,7 @@ const confirmCall = async () => {
     if (error) throw error
 
     showCallModal.value = false
-    successMessage.value = `¡${selectedChild.value.nombre} ha sido notificado/a para salir!`
+    successMessage.value = `¡${selectedChild.value.nombre} ${selectedChild.value.apellido} ha sido notificado/a para salir!`
     showSuccessNotification.value = true
 
     setTimeout(() => {
