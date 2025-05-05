@@ -370,7 +370,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { supabase } from '../supabase'
-import Chart from 'chart.js/auto'
+import { Chart } from 'chart.js/auto'
 
 const router = useRouter()
 const authStore = useAuthStore()
