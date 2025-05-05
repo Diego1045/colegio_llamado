@@ -1,23 +1,13 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex justify-between items-center">
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user text-3xl"></i>
-            <h1 class="text-2xl font-bold">Mi Perfil</h1>
-          </div>
-          <router-link to="/dashboard" class="text-white hover:text-blue-200 transition">
-            <i class="fas fa-arrow-left mr-2"></i>Volver al Dashboard
-          </router-link>
-        </div>
-      </div>
-    </header>
-
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8 mt-4">
       <div class="max-w-2xl mx-auto">
+        <div class="flex items-center mb-6">
+          <i class="fas fa-user text-3xl text-blue-600 mr-3"></i>
+          <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Mi Perfil</h1>
+        </div>
+        
         <!-- Información Personal -->
         <section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
           <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Información Personal</h2>
@@ -25,17 +15,17 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
               <input type="text" v-model="perfil.nombre" required
-                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido</label>
               <input type="text" v-model="perfil.apellido" required
-                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo Electrónico</label>
               <input type="email" v-model="perfil.email" disabled
-                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 dark:text-gray-400">
+                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
             </div>
             <div class="pt-4">
               <button type="submit" :disabled="loading"
@@ -53,17 +43,17 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña Actual</label>
               <input type="password" v-model="password.actual" required
-                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nueva Contraseña</label>
               <input type="password" v-model="password.nueva" required
-                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirmar Nueva Contraseña</label>
               <input type="password" v-model="password.confirmacion" required
-                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
             </div>
             <div class="pt-4">
               <button type="submit" :disabled="loadingPassword"
@@ -103,37 +93,131 @@ onMounted(async () => {
 
 const cargarPerfil = async () => {
   try {
-    const { data, error } = await supabase
-      .from('usuarios')
+    if (!authStore.user || !authStore.user.id) {
+      console.error('Usuario no autenticado o sin ID')
+      // Intentar inicializar el store si el usuario no está disponible
+      await authStore.initialize()
+      
+      // Si después de inicializar sigue sin haber usuario, salir
+      if (!authStore.user || !authStore.user.id) {
+        console.error('No se pudo obtener el usuario después de la inicialización')
+        return
+      }
+    }
+    
+    // Mostrar información del usuario para depuración
+    console.log('Información del usuario autenticado:', authStore.user)
+    
+    // Pre-establecer el correo electrónico desde el usuario autenticado
+    perfil.value.email = authStore.user.email || ''
+    
+    // Intentar obtener la lista de todas las tablas disponibles
+    const { data: tables, error: tablesError } = await supabase
+      .from('pg_tables')
+      .select('tablename')
+      .eq('schemaname', 'public')
+    
+    if (!tablesError) {
+      console.log('Tablas disponibles:', tables)
+    }
+    
+    // Intentar obtener perfil de la tabla profiles (común en Supabase)
+    let { data: profileData, error: profileError } = await supabase
+      .from('profiles')
       .select('*')
       .eq('id', authStore.user.id)
-      .single()
-
-    if (error) throw error
-    perfil.value = {
-      nombre: data.nombre,
-      apellido: data.apellido,
-      email: authStore.user.email
+    
+    if (!profileError && profileData && profileData.length > 0) {
+      console.log('Datos encontrados en tabla profiles:', profileData)
+      perfil.value = {
+        nombre: profileData[0].nombre || profileData[0].name || profileData[0].first_name || '',
+        apellido: profileData[0].apellido || profileData[0].lastname || profileData[0].last_name || '',
+        email: authStore.user.email || ''
+      }
+      return
     }
+    
+    // Intentar con tabla users
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+    
+    console.log('Consulta a tabla users - data:', data, 'error:', error)
+    
+    if (!error && data && data.length > 0) {
+      // Buscar un registro que coincida con el usuario
+      const userProfile = data.find(item => item.id === authStore.user.id || 
+                                          item.auth_id === authStore.user.id || 
+                                          item.user_id === authStore.user.id || 
+                                          item.email === authStore.user.email)
+      
+      if (userProfile) {
+        console.log('Perfil encontrado en users por coincidencia:', userProfile)
+        perfil.value = {
+          nombre: userProfile.nombre || userProfile.name || userProfile.first_name || '',
+          apellido: userProfile.apellido || userProfile.lastname || userProfile.last_name || '',
+          email: authStore.user.email || ''
+        }
+        return
+      } else {
+        console.log('No se encontró coincidencia en la tabla users para el usuario:', authStore.user.id)
+      }
+    }
+    
+    // Si llegamos aquí, no se encontró el perfil
+    console.log('No se encontró perfil en ninguna tabla. Usando email del usuario autenticado.')
+    perfil.value = {
+      nombre: '',
+      apellido: '',
+      email: authStore.user.email || ''
+    }
+    
   } catch (error) {
     console.error('Error al cargar perfil:', error)
+    alert('Error al cargar los datos del perfil. Por favor, intente nuevamente.')
   }
 }
 
 const actualizarPerfil = async () => {
   try {
     loading.value = true
+    
+    // Determinar en qué tabla guardar los datos
+    // Primero intentemos con profiles
+    let { error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authStore.user.id)
+    
+    if (!profilesError) {
+      // La tabla profiles existe y podemos consultarla
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: authStore.user.id,
+          nombre: perfil.value.nombre,
+          apellido: perfil.value.apellido,
+          updated_at: new Date().toISOString()
+        })
+      
+      if (error) throw error
+      alert('Perfil actualizado exitosamente')
+      return
+    }
+    
+    // Si no existe profiles, intentemos con users
     const { error } = await supabase
-      .from('usuarios')
-      .update({
+      .from('users')
+      .upsert({
+        id: authStore.user.id,
         nombre: perfil.value.nombre,
         apellido: perfil.value.apellido,
         updated_at: new Date().toISOString()
       })
-      .eq('id', authStore.user.id)
-
+    
     if (error) throw error
     alert('Perfil actualizado exitosamente')
+    
   } catch (error) {
     console.error('Error al actualizar perfil:', error)
     alert('Error al actualizar el perfil')

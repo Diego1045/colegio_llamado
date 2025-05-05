@@ -169,6 +169,34 @@ const eliminarEstudiante = async (estudiante) => {
 }
 
 const guardarEstudiante = async () => {
+  // Validar que el usuario esté autenticado
+  if (!authStore.user || !authStore.user.id) {
+    alert('Debes iniciar sesión para agregar un estudiante.')
+    return
+  }
+
+  // Verificar que el usuario existe en la tabla usuarios y es padre
+  const { data: usuario, error: usuarioError } = await supabase
+    .from('usuarios')
+    .select('id, rol')
+    .eq('id', authStore.user.id)
+    .single();
+
+  if (usuarioError || !usuario) {
+    alert('No existe un usuario válido para asociar como padre. Por favor, contacta al colegio.')
+    loading.value = false;
+    return;
+  }
+
+  if (usuario.rol !== 'padre') {
+    alert('Solo los usuarios con rol de padre pueden asociar estudiantes.')
+    loading.value = false;
+    return;
+  }
+  
+  console.log('Usuario autenticado:', authStore.user)
+  const session = await supabase.auth.getSession()
+  console.log('Sesión actual:', session)
   try {
     loading.value = true
     let estudianteId
@@ -185,25 +213,34 @@ const guardarEstudiante = async () => {
         })
         .eq('id', estudianteEditando.value.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error al actualizar estudiante:', error)
+        alert('Error al actualizar estudiante: ' + error.message)
+        throw error
+      }
       estudianteId = estudianteEditando.value.id
     } else {
+      const nuevoEstudiante = {
+        nombre: formEstudiante.value.nombre,
+        apellido: formEstudiante.value.apellido,
+        grado: formEstudiante.value.grado,
+        seccion: formEstudiante.value.seccion,
+        creado_por: authStore.user.id ? authStore.user.id.toString() : null
+      }
+      console.log('Objeto a insertar:', nuevoEstudiante)
       const { data, error } = await supabase
         .from('estudiantes')
-        .insert([
-          {
-            nombre: formEstudiante.value.nombre,
-            apellido: formEstudiante.value.apellido,
-            grado: formEstudiante.value.grado,
-            seccion: formEstudiante.value.seccion
-          }
-        ])
+        .insert([nuevoEstudiante])
         .select()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error al insertar estudiante:', error)
+        alert('Error al insertar estudiante: ' + error.message)
+        throw error
+      }
       estudianteId = data[0].id
 
-      // Crear relación padre-estudiante
+      // 2. Insertar relación padre-estudiante
       const { error: relacionError } = await supabase
         .from('padres_estudiantes')
         .insert([
@@ -213,14 +250,18 @@ const guardarEstudiante = async () => {
           }
         ])
 
-      if (relacionError) throw relacionError
+      if (relacionError) {
+        console.error('Error al insertar relación padre-estudiante:', relacionError)
+        alert('Error al insertar relación padre-estudiante: ' + relacionError.message)
+        throw relacionError
+      }
     }
 
     await cargarEstudiantes()
     cerrarFormulario()
   } catch (error) {
     console.error('Error al guardar estudiante:', error)
-    alert('Error al guardar el estudiante')
+    alert('Error al guardar el estudiante: ' + (error.message || error))
   } finally {
     loading.value = false
   }
