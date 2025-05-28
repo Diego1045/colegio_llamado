@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
     <header class="bg-purple-600 text-white shadow-lg">
-      <div class="container mx-auto px-4 py-6">
+      <div class="max-w-7xl mx-auto px-4 py-6">
         <div class="flex justify-between items-center">
           <div class="flex items-center space-x-3">
             <i class="fas fa-users text-3xl"></i>
@@ -16,13 +16,13 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
       <!-- Buscar Padres -->
       <section class="mb-8">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 space-y-2 sm:space-y-0">
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Buscar Padres</h2>
-            <div class="flex">
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Buscar Padres</h2>
+            <div class="flex gap-4">
               <input 
                 v-model="busqueda" 
                 type="text" 
@@ -32,13 +32,13 @@
               />
               <button 
                 @click="buscarPadres" 
-                class="ml-2 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
               >
                 <i class="fas fa-search"></i>
               </button>
             </div>
           </div>
-          <div class="flex flex-wrap gap-2">
+          <div class="flex flex-wrap gap-4">
             <button 
               @click="mostrarFormulario = true; padreEditando = null"
               class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
@@ -52,7 +52,7 @@
       <!-- Lista de Padres -->
       <section class="mb-8">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Lista de Padres</h2>
+          <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Lista de Padres</h2>
           <div v-if="loading" class="flex justify-center my-8">
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
           </div>
@@ -63,10 +63,10 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nombre</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hijos</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nombre</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hijos</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -81,21 +81,23 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-500 dark:text-gray-300">
-                      <span class="text-xs inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full px-2 py-1 mr-1">
+                      <span class="text-xs inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full px-3 py-1">
                         {{ padre.hijos ? padre.hijos.length : 0 }} hijos
                       </span>
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button @click="editarPadre(padre)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button @click="asignarHijos(padre)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">
-                      <i class="fas fa-child"></i>
-                    </button>
-                    <button @click="eliminarPadre(padre)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                      <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="flex gap-3">
+                      <button @click="editarPadre(padre)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button @click="asignarHijos(padre)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                        <i class="fas fa-child"></i>
+                      </button>
+                      <button @click="eliminarPadre(padre)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>

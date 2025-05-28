@@ -64,7 +64,7 @@
 
         <!-- Módulo para administradores: Sistema de anuncios (NUEVO) -->
         <router-link 
-          v-if="isAdmin"
+          v-if="isAdmin && userRole === 'docente'"
           to="/anuncios" 
           class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-lg transition flex flex-col h-full border-l-4 border-blue-500"
         >

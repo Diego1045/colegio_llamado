@@ -70,15 +70,12 @@ export default {
             <h1 class="text-2xl font-bold">Colegio Albert Einstein</h1>
           </div>
           <nav class="flex space-x-2 md:space-x-4">
-            <!-- <router-link to="/" class="nav-link">
+            <router-link to="/" class="nav-link">
               <font-awesome-icon :icon="['fas', 'home']" class="mr-2" />Inicio
-            </router-link> -->
+            </router-link>
             <template v-if="!authStore.isAuthenticated">
               <router-link to="/login" class="nav-link">
-                <font-awesome-icon :icon="['fas', 'sign-in-alt']" class="mr-2" />Login
-              </router-link>
-              <router-link to="/register" class="nav-link">
-                <font-awesome-icon :icon="['fas', 'user-plus']" class="mr-2" />Registro
+                <font-awesome-icon :icon="['fas', 'sign-in-alt']" class="mr-2" />Iniciar Sesión
               </router-link>
             </template>
             <template v-else>
@@ -98,7 +95,10 @@ export default {
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto">
+    <main v-if="shouldHideHeader" class="w-full">
+      <router-view/>
+    </main>
+    <main v-else class="container mx-auto">
       <div class="w-full max-w-4xl mx-auto">
         <router-view/>
       </div>

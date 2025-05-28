@@ -18,9 +18,11 @@
       </button>
       <div class="links">
         <router-link to="/reset-password">¿Olvidaste tu contraseña?</router-link>
-        <router-link to="/register">¿No tienes cuenta? Regístrate</router-link>
       </div>
     </form>
+    <div class="text-center mt-4">
+      <p class="text-sm text-gray-600">¿Necesitas ayuda? Contacta al administrador</p>
+    </div>
   </div>
 </template>
 

@@ -15,12 +15,11 @@
             <h1 class="text-2xl font-bold">Colegio Albert Einstein</h1>
           </div>
           <div class="flex items-center space-x-4">
-            <router-link to="/login" class="text-white hover:text-blue-200 transition">
-              <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
-            </router-link>
-            <router-link to="/register" class="text-white hover:text-blue-200 transition">
-              <i class="fas fa-user-plus mr-2"></i>Registrarse
-            </router-link>
+            <div class="flex space-x-4">
+              <router-link to="/login" class="text-white hover:text-blue-200 transition">
+                Iniciar Sesión
+              </router-link>
+            </div>
           </div>
         </div>
       </div>
@@ -73,9 +72,11 @@
         <p class="text-xl text-gray-600 mb-8">
           Regístrate ahora y mantén un control seguro sobre la salida de tus hijos.
         </p>
-        <router-link to="/register" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300 inline-block">
-          <i class="fas fa-user-plus mr-2"></i>Registrarse Ahora
-        </router-link>
+        <div class="mt-8">
+          <router-link to="/login" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300 inline-block">
+            Iniciar Sesión
+          </router-link>
+        </div>
       </section>
 
       <!-- Testimonials Section -->

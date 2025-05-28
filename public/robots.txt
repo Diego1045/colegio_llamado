@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Bloquear rutas privadas y de administración
+Disallow: /dashboard
+Disallow: /perfil
+Disallow: /estudiantes
+Disallow: /registros
+Disallow: /anuncios
+Disallow: /director
+Disallow: /padres
+Disallow: /reset-password
+
+# Permitir páginas públicas
+Allow: /login
+Allow: /
+
+# Sitemap
+Sitemap: https://colegio-llamado.captadata.com/sitemap.xml
+
+# Crawl-delay para ser amigable con los servidores
+Crawl-delay: 1 

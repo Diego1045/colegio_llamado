@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run generate:sitemap && vite build",
     "preview": "vite preview",
-    "server": "node server.js"
+    "server": "node server.js",
+    "generate:sitemap": "node scripts/generate-sitemap.js",
+    "seo:audit": "echo 'Ejecutar auditoría SEO con herramientas como Lighthouse o PageSpeed Insights'",
+    "seo:validate": "echo 'Validar sitemap en https://www.xml-sitemaps.com/validate-xml-sitemap.html'"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
