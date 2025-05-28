@@ -18,10 +18,10 @@
             </div>
             <button 
               @click="initiateCall(child)"
-              :disabled="!isWithinSchoolHours"
+              :disabled="!isWithinSchoolHours && !isLocalEnv"
               :class="[
                 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition',
-                (!isWithinSchoolHours) ? 'opacity-50 cursor-not-allowed' : ''
+                (!isWithinSchoolHours && !isLocalEnv) ? 'opacity-50 cursor-not-allowed' : ''
               ]"
             >
               Llamar
@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { supabase } from '../supabase'
 import { useAuthStore } from '../stores/auth'
 
@@ -95,6 +95,10 @@ const showSuccessNotification = ref(false)
 const successMessage = ref('')
 const loading = ref(false)
 const loadError = ref(null)
+
+// Obtener el entorno de la aplicación
+const APP_ENV = import.meta.env.VITE_APP_ENV || 'production'
+const isLocalEnv = computed(() => APP_ENV === 'local')
 
 const props = defineProps({
   onCallInitiated: {
@@ -153,6 +157,12 @@ const loadChildren = async () => {
 }
 
 const checkSchoolHours = () => {
+  // Si estamos en entorno local, siempre permitimos llamar
+  if (isLocalEnv.value) {
+    isWithinSchoolHours.value = true
+    return
+  }
+  
   const now = new Date()
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()

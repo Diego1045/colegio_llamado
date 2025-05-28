@@ -2,19 +2,56 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
     <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Anuncios por Micrófono</h3>
     
+    <!-- Opción de llamado automático -->
+    <div class="mb-4 flex items-center justify-between bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
+      <div class="flex items-center">
+        <input 
+          id="llamadoAutomatico" 
+          v-model="llamadoAutomatico" 
+          type="checkbox" 
+          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+        />
+        <label for="llamadoAutomatico" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+          Activar llamado automático de estudiantes
+        </label>
+      </div>
+      <span 
+        v-if="llamadoAutomatico" 
+        class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300"
+      >
+        <span class="mr-1 h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+        Activo
+      </span>
+    </div>
+    
     <!-- Lista de estudiantes pendientes para llamar -->
     <div v-if="loading" class="text-center py-8">
       <p class="text-gray-500 dark:text-gray-400">Cargando...</p>
     </div>
     <div v-else-if="estudiantesPendientes.length > 0" class="space-y-4 mb-6">
-      <h4 class="font-medium text-gray-700 dark:text-gray-300">Estudiantes pendientes de llamado</h4>
+      <div class="flex justify-between items-center">
+        <h4 class="font-medium text-gray-700 dark:text-gray-300">Estudiantes pendientes de llamado</h4>
+        <span v-if="actualizandoSilenciosamente" class="text-xs text-blue-500 dark:text-blue-400 flex items-center">
+          <svg class="animate-spin -ml-1 mr-2 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Actualizando...
+        </span>
+      </div>
       <div 
         v-for="estudiante in estudiantesPendientes" 
         :key="estudiante.id"
         class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 flex justify-between items-center"
+        :class="{'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20': estudianteLlamandoId === estudiante.id}"
       >
         <div>
-          <h4 class="font-semibold text-gray-800 dark:text-white">{{ estudiante.nombre }} {{ estudiante.apellido }}</h4>
+          <h4 class="font-semibold text-gray-800 dark:text-white">
+            {{ estudiante.nombre }} {{ estudiante.apellido }}
+            <span v-if="estudianteLlamandoId === estudiante.id" class="ml-2 inline-flex items-center text-blue-600 dark:text-blue-400 text-sm animate-pulse">
+              <i class="fas fa-volume-up mr-1"></i> Llamando...
+            </span>
+          </h4>
           <p class="text-gray-600 dark:text-gray-300 text-sm">
             Grado {{ estudiante.grado }} - Sección {{ estudiante.seccion }}
             <span class="text-xs ml-2 text-blue-600">Solicitado hace {{ formatTimeDifference(estudiante.fecha_hora) }}</span>
@@ -25,12 +62,15 @@
             @click="anunciarEstudiante(estudiante)"
             class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm transition"
             :disabled="estaAnunciando"
+            :class="{'opacity-50 cursor-not-allowed': estaAnunciando}"
           >
             <i class="fas fa-microphone mr-1"></i> Anunciar
           </button>
           <button 
             @click="marcarComoCompletado(estudiante.registro_id)"
             class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm transition"
+            :disabled="estudianteLlamandoId === estudiante.id"
+            :class="{'opacity-50 cursor-not-allowed': estudianteLlamandoId === estudiante.id}"
           >
             <i class="fas fa-check mr-1"></i> Completado
           </button>
@@ -152,7 +192,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { supabase } from '../supabase'
 import { useAuthStore } from '../stores/auth'
 
@@ -160,9 +200,12 @@ const authStore = useAuthStore()
 const estudiantesPendientes = ref([])
 const anunciosRecientes = ref([])
 const loading = ref(false)
+const actualizandoSilenciosamente = ref(false)
 const estaAnunciando = ref(false)
+const estudianteLlamandoId = ref(null)
 const showNotification = ref(false)
 const notificationMessage = ref('')
+const llamadoAutomatico = ref(false)
 const anuncioManual = ref({
   nombre: '',
   apellido: '',
@@ -173,6 +216,7 @@ const anuncioManual = ref({
 // Para la síntesis de voz
 let voiceSynthesis = null
 let subscription = null
+let intervaloActualizacion = null
 
 onMounted(async () => {
   await cargarEstudiantesPendientes()
@@ -186,23 +230,61 @@ onMounted(async () => {
     .channel('registros_salida')
     .on('postgres_changes', 
       { event: 'INSERT', schema: 'public', table: 'registros_salida' }, 
-      () => {
-        cargarEstudiantesPendientes()
-        cargarAnunciosRecientes()
+      async (payload) => {
+        await cargarEstudiantesPendientes(true)
+        await cargarAnunciosRecientes()
+        
+        // Si el llamado automático está activo, anunciar el nuevo estudiante
+        if (llamadoAutomatico.value && !estaAnunciando.value && estudiantesPendientes.value.length > 0) {
+          // Buscar el estudiante recién añadido (asumimos que es el primero en la lista actualizada)
+          const nuevoEstudiante = estudiantesPendientes.value[0]
+          anunciarEstudiante(nuevoEstudiante)
+        }
       }
     )
     .subscribe()
+    
+  // Configurar actualización automática cada 5 segundos
+  intervaloActualizacion = setInterval(async () => {
+    await cargarEstudiantesPendientes(true)
+    
+    // Si el llamado automático está activo y no hay anuncios en curso, anunciar el próximo estudiante
+    if (llamadoAutomatico.value && !estaAnunciando.value && estudiantesPendientes.value.length > 0) {
+      const siguienteEstudiante = estudiantesPendientes.value[0]
+      anunciarEstudiante(siguienteEstudiante)
+    }
+  }, 5000)
 })
+
+// Observar cambios en la lista de estudiantes pendientes para el llamado automático
+watch(estudiantesPendientes, (nuevaLista, antiguaLista) => {
+  // Si hay nuevos estudiantes pendientes, el llamado automático está activo y no hay anuncios en curso
+  if (nuevaLista.length > 0 && llamadoAutomatico.value && !estaAnunciando.value) {
+    // Si la lista estaba vacía o el primer estudiante es diferente
+    if (antiguaLista.length === 0 || nuevaLista[0].id !== antiguaLista[0]?.id) {
+      anunciarEstudiante(nuevaLista[0])
+    }
+  }
+}, { deep: true })
 
 onUnmounted(() => {
   // Limpiar suscripción
   if (subscription) {
     supabase.removeChannel(subscription)
   }
+  
+  // Limpiar intervalo de actualización
+  if (intervaloActualizacion) {
+    clearInterval(intervaloActualizacion)
+  }
 })
 
-const cargarEstudiantesPendientes = async () => {
-  loading.value = true
+const cargarEstudiantesPendientes = async (silencioso = false) => {
+  if (silencioso) {
+    actualizandoSilenciosamente.value = true
+  } else {
+    loading.value = true
+  }
   
   try {
     // Buscar registros pendientes
@@ -231,7 +313,11 @@ const cargarEstudiantesPendientes = async () => {
   } catch (error) {
     console.error('Error al cargar estudiantes pendientes:', error)
   } finally {
-    loading.value = false
+    if (silencioso) {
+      actualizandoSilenciosamente.value = false
+    } else {
+      loading.value = false
+    }
   }
 }
 
@@ -267,12 +353,23 @@ const cargarAnunciosRecientes = async () => {
 
 const anunciarEstudiante = (estudiante) => {
   estaAnunciando.value = true
+  estudianteLlamandoId.value = estudiante.id
   
-  const textoAnuncio = `Atención. Se solicita la presencia de ${estudiante.nombre} ${estudiante.apellido} de ${estudiante.grado} sección ${estudiante.seccion} en la puerta principal. Su representante ha llegado.`
+  let textoAnuncio = `${estudiante.nombre} ${estudiante.apellido}`;
+  if (estudiante.grado) {
+    textoAnuncio += ` de ${estudiante.grado}`;
+  }
+  if (estudiante.seccion) {
+    textoAnuncio += ` sección ${estudiante.seccion}`;
+  }
+  //dos veces separado por un punto
+  textoAnuncio += `. ${textoAnuncio}`;
+
   
   hablarPorVoz(textoAnuncio, () => {
     actualizarEstadoRegistro(estudiante.registro_id, 'anunciado')
     estaAnunciando.value = false
+    estudianteLlamandoId.value = null
   })
 }
 
@@ -324,7 +421,7 @@ const hablarPorVoz = (texto, callback) => {
     utterance.voice = spanishVoice
   }
   
-  utterance.rate = 0.9 // Un poco más lento para mayor claridad
+  utterance.rate = 1 // Un poco más lento para mayor claridad
   utterance.pitch = 1
   utterance.volume = 1
   
