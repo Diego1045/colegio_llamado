@@ -98,6 +98,9 @@ export default {
     <main v-if="shouldHideHeader" class="w-full">
       <router-view/>
     </main>
+    <main v-else-if="$route.path === '/'" class="w-full">
+      <router-view/>
+    </main>
     <main v-else class="container mx-auto">
       <div class="w-full max-w-4xl mx-auto">
         <router-view/>

@@ -64,7 +64,7 @@
 
         <!-- Módulo para administradores: Sistema de anuncios (NUEVO) -->
         <router-link 
-          v-if="isAdmin && userRole === 'docente'"
+          v-if="userRole === 'admin' || userRole === 'docente' || isLocalEnv"
           to="/anuncios" 
           class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-lg transition flex flex-col h-full border-l-4 border-blue-500"
         >
@@ -83,7 +83,7 @@
 
         <!-- Módulo para administradores: Gestión de padres -->
         <router-link 
-          v-if="isAdmin"
+          v-if="userRole === 'admin' || isLocalEnv"
           to="/padres" 
           class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 hover:shadow-lg transition flex flex-col h-full"
         >

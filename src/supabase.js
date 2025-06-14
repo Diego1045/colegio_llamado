@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { DEFAULT_ROLE } from './config/roles.js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -20,8 +21,20 @@ export const auth = {
   },
 
   // Registrarse con email y contraseña
-  signUp: async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+  signUp: async (email, password, userData = {}) => {
+    // Establecer rol por defecto desde configuración centralizada
+    const defaultUserData = {
+      role: DEFAULT_ROLE,
+      ...userData
+    }
+    
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: defaultUserData
+      }
+    })
     return { data, error }
   },
 

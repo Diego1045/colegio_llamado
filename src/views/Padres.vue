@@ -1,313 +1,331 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Header -->
-    <header class="bg-purple-600 text-white shadow-lg">
-      <div class="max-w-7xl mx-auto px-4 py-6">
-        <div class="flex justify-between items-center">
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-users text-3xl"></i>
-            <h1 class="text-2xl font-bold">Gestión de Padres</h1>
-          </div>
-          <router-link to="/director" class="text-white hover:text-purple-200 transition">
-            <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+    <!-- Mostrar mensaje de error si no tiene permisos -->
+    <div v-if="!tienePermisos" class="container mx-auto px-4 py-8">
+      <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
+        <div class="flex items-center">
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          <span>No tienes permisos para acceder a esta sección. Solo administradores pueden gestionar padres.</span>
+        </div>
+        <div class="mt-2">
+          <router-link to="/dashboard" class="text-red-600 dark:text-red-400 underline hover:text-red-800 dark:hover:text-red-300">
+            Volver al Dashboard
           </router-link>
         </div>
       </div>
-    </header>
+    </div>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 max-w-7xl">
-      <!-- Buscar Padres -->
-      <section class="mb-8">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Buscar Padres</h2>
-            <div class="flex gap-4">
-              <input 
-                v-model="busqueda" 
-                type="text" 
-                placeholder="Buscar por nombre o email"
-                class="w-full sm:w-64 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-                @keyup.enter="buscarPadres"
-              />
-              <button 
-                @click="buscarPadres" 
-                class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
-              >
-                <i class="fas fa-search"></i>
-              </button>
+    <!-- Contenido principal - solo mostrar si tiene permisos -->
+    <div v-if="tienePermisos">
+      <!-- Header -->
+      <header class="bg-purple-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+              <i class="fas fa-users text-3xl"></i>
+              <h1 class="text-2xl font-bold">Gestión de Padres</h1>
             </div>
-          </div>
-          <div class="flex flex-wrap gap-4">
-            <button 
-              @click="mostrarFormulario = true; padreEditando = null"
-              class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
-            >
-              <i class="fas fa-plus mr-2"></i>Crear Padre
-            </button>
+            <router-link to="/director" class="text-white hover:text-purple-200 transition">
+              <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+            </router-link>
           </div>
         </div>
-      </section>
+      </header>
 
-      <!-- Lista de Padres -->
-      <section class="mb-8">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Lista de Padres</h2>
-          <div v-if="loading" class="flex justify-center my-8">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-          </div>
-          <div v-else-if="padres.length === 0" class="text-center py-8">
-            <p class="text-gray-600 dark:text-gray-400">No se encontraron padres registrados</p>
-          </div>
-          <div v-else class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead class="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nombre</th>
-                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hijos</th>
-                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                <tr v-for="padre in padres" :key="padre.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">
-                      {{ padre.nombre }} {{ padre.apellido }}
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-500 dark:text-gray-300">{{ padre.email }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-500 dark:text-gray-300">
-                      <span class="text-xs inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full px-3 py-1">
-                        {{ padre.hijos ? padre.hijos.length : 0 }} hijos
-                      </span>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex gap-3">
-                      <button @click="editarPadre(padre)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button @click="asignarHijos(padre)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
-                        <i class="fas fa-child"></i>
-                      </button>
-                      <button @click="eliminarPadre(padre)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- Formulario de Padre -->
-      <div v-if="mostrarFormulario" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-          <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
-            {{ padreEditando ? 'Editar Padre' : 'Crear Padre' }}
-          </h3>
-          <form @submit.prevent="guardarPadre" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
-              <input 
-                type="text" 
-                v-model="formPadre.nombre" 
-                required
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
+      <!-- Main Content -->
+      <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Buscar Padres -->
+        <section class="mb-8">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+              <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Buscar Padres</h2>
+              <div class="flex gap-4">
+                <input 
+                  v-model="busqueda" 
+                  type="text" 
+                  placeholder="Buscar por nombre o email"
+                  class="w-full sm:w-64 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                  @keyup.enter="buscarPadres"
+                />
+                <button 
+                  @click="buscarPadres" 
+                  class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                >
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido</label>
-              <input 
-                type="text" 
-                v-model="formPadre.apellido" 
-                required
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-              <input 
-                type="email" 
-                v-model="formPadre.email" 
-                required
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-            </div>
-            <div v-if="!padreEditando">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña</label>
-              <input 
-                type="password" 
-                v-model="formPadre.password" 
-                :required="!padreEditando"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-            </div>
-            <div class="flex justify-end space-x-2 pt-4">
+            <div class="flex flex-wrap gap-4">
               <button 
-                type="button" 
-                @click="mostrarFormulario = false"
-                class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                @click="mostrarFormulario = true; padreEditando = null"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
               >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                :disabled="loadingGuardar"
-                class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
-              >
-                {{ loadingGuardar ? 'Guardando...' : 'Guardar' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Modal Asignar Hijos -->
-      <div v-if="mostrarModalHijos" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white">
-              Asignar Hijos a {{ padreSelecionado?.nombre }} {{ padreSelecionado?.apellido }}
-            </h3>
-            <button @click="mostrarModalHijos = false" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-
-          <!-- Búsqueda de estudiantes -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar entre los hijos asignados</label>
-            <div class="flex">
-              <input 
-                v-model="busquedaEstudiantes" 
-                type="text" 
-                placeholder="Buscar por nombre"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-                @input="filtrarHijosAsignados"
-              />
-              <button 
-                @click="mostrarFormularioHijo = true"
-                class="ml-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
-              >
-                <i class="fas fa-plus mr-1"></i>Nuevo Hijo
+                <i class="fas fa-plus mr-2"></i>Crear Padre
               </button>
             </div>
           </div>
+        </section>
 
-          <!-- Secciones de hijos asignados y disponibles -->
-          <div class="mb-4">
-            <!-- Estudiantes asignados -->
-            <div>
-              <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Hijos Asignados</h4>
-              <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto">
-                <div v-if="loadingHijos" class="flex justify-center my-8">
-                  <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
-                </div>
-                <div v-else-if="hijosAsignados.length === 0" class="text-center py-4">
-                  <p class="text-gray-600 dark:text-gray-400">No hay hijos asignados</p>
-                </div>
-                <div v-else>
-                  <div v-for="hijo in hijosAsignadosFiltrados" :key="hijo.id" class="bg-white dark:bg-gray-800 rounded p-2 mb-2 flex justify-between items-center">
-                    <div>
-                      <span class="font-medium">{{ hijo.nombre }} {{ hijo.apellido }}</span>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ hijo.grado }} - {{ hijo.seccion }}
+        <!-- Lista de Padres -->
+        <section class="mb-8">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Lista de Padres</h2>
+            <div v-if="loading" class="flex justify-center my-8">
+              <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+            <div v-else-if="padres.length === 0" class="text-center py-8">
+              <p class="text-gray-600 dark:text-gray-400">No se encontraron padres registrados</p>
+            </div>
+            <div v-else class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nombre</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hijos</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr v-for="padre in padres" :key="padre.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ padre.nombre }} {{ padre.apellido }}
                       </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-500 dark:text-gray-300">{{ padre.email }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-500 dark:text-gray-300">
+                        <span class="text-xs inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full px-3 py-1">
+                          {{ padre.hijos ? padre.hijos.length : 0 }} hijos
+                        </span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex gap-3">
+                        <button @click="editarPadre(padre)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button @click="asignarHijos(padre)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                          <i class="fas fa-child"></i>
+                        </button>
+                        <button @click="eliminarPadre(padre)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Formulario de Padre -->
+        <div v-if="mostrarFormulario" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+              {{ padreEditando ? 'Editar Padre' : 'Crear Padre' }}
+            </h3>
+            <form @submit.prevent="guardarPadre" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+                <input 
+                  type="text" 
+                  v-model="formPadre.nombre" 
+                  required
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido</label>
+                <input 
+                  type="text" 
+                  v-model="formPadre.apellido" 
+                  required
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <input 
+                  type="email" 
+                  v-model="formPadre.email" 
+                  required
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+              </div>
+              <div v-if="!padreEditando">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña</label>
+                <input 
+                  type="password" 
+                  v-model="formPadre.password" 
+                  :required="!padreEditando"
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+              </div>
+              <div class="flex justify-end space-x-2 pt-4">
+                <button 
+                  type="button" 
+                  @click="mostrarFormulario = false"
+                  class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  :disabled="loadingGuardar"
+                  class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                >
+                  {{ loadingGuardar ? 'Guardando...' : 'Guardar' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Modal Asignar Hijos -->
+        <div v-if="mostrarModalHijos" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-bold text-gray-800 dark:text-white">
+                Asignar Hijos a {{ padreSelecionado?.nombre }} {{ padreSelecionado?.apellido }}
+              </h3>
+              <button @click="mostrarModalHijos = false" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <!-- Búsqueda de estudiantes -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar entre los hijos asignados</label>
+              <div class="flex">
+                <input 
+                  v-model="busquedaEstudiantes" 
+                  type="text" 
+                  placeholder="Buscar por nombre"
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                  @input="filtrarHijosAsignados"
+                />
+                <button 
+                  @click="mostrarFormularioHijo = true"
+                  class="ml-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                >
+                  <i class="fas fa-plus mr-1"></i>Nuevo Hijo
+                </button>
+              </div>
+            </div>
+
+            <!-- Secciones de hijos asignados y disponibles -->
+            <div class="mb-4">
+              <!-- Estudiantes asignados -->
+              <div>
+                <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Hijos Asignados</h4>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto">
+                  <div v-if="loadingHijos" class="flex justify-center my-8">
+                    <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
+                  </div>
+                  <div v-else-if="hijosAsignados.length === 0" class="text-center py-4">
+                    <p class="text-gray-600 dark:text-gray-400">No hay hijos asignados</p>
+                  </div>
+                  <div v-else>
+                    <div v-for="hijo in hijosAsignadosFiltrados" :key="hijo.id" class="bg-white dark:bg-gray-800 rounded p-2 mb-2 flex justify-between items-center">
+                      <div>
+                        <span class="font-medium">{{ hijo.nombre }} {{ hijo.apellido }}</span>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                          {{ hijo.grado }} - {{ hijo.seccion }}
+                        </div>
+                      </div>
+                      <button @click="desasignarHijo(hijo)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                        <i class="fas fa-unlink"></i>
+                      </button>
                     </div>
-                    <button @click="desasignarHijo(hijo)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                      <i class="fas fa-unlink"></i>
-                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="flex justify-end">
-            <button 
-              @click="mostrarModalHijos = false" 
-              class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Formulario para crear hijo -->
-      <div v-if="mostrarFormularioHijo" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-          <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
-            Crear Nuevo Hijo
-          </h3>
-          <form @submit.prevent="guardarHijo" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
-              <input 
-                type="text" 
-                v-model="formHijo.nombre" 
-                required
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido</label>
-              <input 
-                type="text" 
-                v-model="formHijo.apellido" 
-                required
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grado</label>
-              <select 
-                v-model="formHijo.grado" 
-                required
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="" disabled>Seleccionar grado</option>
-                <option v-for="grado in grados" :key="grado" :value="grado">{{ grado }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sección</label>
-              <select 
-                v-model="formHijo.seccion" 
-                required
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="" disabled>Seleccionar sección</option>
-                <option v-for="seccion in secciones" :key="seccion" :value="seccion">{{ seccion }}</option>
-              </select>
-            </div>
-            <div class="flex justify-end space-x-2 pt-4">
+            <div class="flex justify-end">
               <button 
-                type="button" 
-                @click="mostrarFormularioHijo = false"
-                class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                @click="mostrarModalHijos = false" 
+                class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
               >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                :disabled="loadingGuardarHijo"
-                class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
-              >
-                {{ loadingGuardarHijo ? 'Guardando...' : 'Guardar' }}
+                Cerrar
               </button>
             </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </main>
+
+        <!-- Formulario para crear hijo -->
+        <div v-if="mostrarFormularioHijo" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+              Crear Nuevo Hijo
+            </h3>
+            <form @submit.prevent="guardarHijo" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+                <input 
+                  type="text" 
+                  v-model="formHijo.nombre" 
+                  required
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido</label>
+                <input 
+                  type="text" 
+                  v-model="formHijo.apellido" 
+                  required
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grado</label>
+                <select 
+                  v-model="formHijo.grado" 
+                  required
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="" disabled>Seleccionar grado</option>
+                  <option v-for="grado in grados" :key="grado" :value="grado">{{ grado }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sección</label>
+                <select 
+                  v-model="formHijo.seccion" 
+                  required
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="" disabled>Seleccionar sección</option>
+                  <option v-for="seccion in secciones" :key="seccion" :value="seccion">{{ seccion }}</option>
+                </select>
+              </div>
+              <div class="flex justify-end space-x-2 pt-4">
+                <button 
+                  type="button" 
+                  @click="mostrarFormularioHijo = false"
+                  class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  :disabled="loadingGuardarHijo"
+                  class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                >
+                  {{ loadingGuardarHijo ? 'Guardando...' : 'Guardar' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
@@ -357,6 +375,7 @@ const grados = [
   '11° Secundaria'
 ]
 const secciones = ['', 'A', 'B', 'C', 'D', 'E']
+const tienePermisos = ref(true) // Assuming the component has a ref to check permissions
 
 onMounted(async () => {
   await cargarPadres()

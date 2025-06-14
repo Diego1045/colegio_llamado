@@ -10,10 +10,13 @@ const APP_ENV = import.meta.env.VITE_APP_ENV || 'production'
 const routes = [
   {
     path: '/',
-    redirect: '/login',
+    name: 'Home',
+    component: () => import('../views/Home.vue'),
     meta: {
+      requiresAuth: false,
       title: 'Colegio Llamado - Sistema de Gestión de Salida Escolar',
-      description: 'Sistema seguro de gestión de llamado y salida de estudiantes para colegios. Utiliza geolocalización y autenticación para garantizar la seguridad de los alumnos.'
+      description: 'Sistema seguro de gestión de llamado y salida de estudiantes para colegios. Utiliza geolocalización y autenticación para garantizar la seguridad de los alumnos.',
+      seoPage: 'home'
     }
   },
   {
@@ -175,31 +178,41 @@ router.beforeEach(async (to, from, next) => {
         .eq('id', authStore.user.id)
         .single()
 
-      if (!error && data && data.role === to.meta.role) {
-        // Si el rol en la base de datos coincide con el requerido, permitir acceso
-        next()
-        return
-      } else if (to.path === '/padres') {
-        // Para la ruta /padres, verificar si es admin en la tabla users
-        if (!error && data && data.role === 'admin') {
+      if (!error && data) {
+        // Verificar si el rol del usuario coincide con el requerido por la ruta
+        if (data.role === to.meta.role) {
           next()
           return
         }
+        
+        // Para rutas que requieren admin o docente (como anuncios)
+        if (to.meta.role === 'admin' && to.path === '/anuncios') {
+          if (data.role === 'admin' || data.role === 'docente') {
+            next()
+            return
+          }
+        }
+        
+        // Si no tiene el rol necesario, redirigir al dashboard
+        console.log(`Usuario con rol '${data.role}' no tiene acceso a ruta que requiere '${to.meta.role}'`)
+        next('/dashboard')
+        return
+      } else {
+        console.error('Error al verificar rol desde BD:', error)
+        // Si hay error obteniendo el rol, redirigir al dashboard por seguridad
+        next('/dashboard')
+        return
       }
     } catch (err) {
       console.error('Error al verificar rol:', err)
+      next('/dashboard')
+      return
     }
   }
 
-  // Para la ruta /padres, permitir acceso temporal para depuración
-  if (to.path === '/padres' && process.env.NODE_ENV === 'development') {
+  // Para rutas sin requisito específico de rol pero que requieren autenticación
+  if (to.meta.requiresAuth && authStore.isAuthenticated) {
     next()
-    return
-  }
-
-  // Para rutas con requisito de rol donde el rol no coincide
-  if (to.meta.role && to.meta.role !== authStore.user?.user_metadata?.role) {
-    next('/dashboard')
     return
   }
 
