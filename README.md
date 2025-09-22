@@ -6,19 +6,26 @@ Sistema web para la gestión de salida de estudiantes, incluyendo registro de ll
 
 - 🚪 Gestión de salida de estudiantes
 - 📱 Interfaz responsiva para padres y administradores
-- 🔐 Sistema de autenticación seguro
+- 🔐 Sistema de autenticación seguro con Laravel Sanctum
 - 📊 Panel de administración con estadísticas
 - 🎫 Generación y gestión de códigos de invitación
 - ⏰ Configuración de horarios por nivel
 - 📱 Notificaciones en tiempo real
 - 🎙️ Sistema de anuncios por micrófono
+- 🔄 Backend Laravel con APIs RESTful
 
 ## Requisitos Técnicos
 
+### Frontend
 - Node.js 16.x o superior
 - Vue.js 3.x
-- Supabase (Backend as a Service)
-- PostgreSQL 14.x
+- Vite
+
+### Backend
+- PHP 8.1 o superior
+- Laravel 10.x
+- SQLite (desarrollo) / MySQL (producción)
+- Composer
 
 ## Instalación
 
@@ -37,24 +44,36 @@ npm install
 ```bash
 cp .env.example .env
 ```
-Editar el archivo `.env` con tus credenciales de Supabase y configuración de la aplicación:
+Editar el archivo `.env` con la configuración de la aplicación:
 
 ```
-# Configuración de Supabase
-VITE_SUPABASE_URL=tu_url_de_supabase
-VITE_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+# Configuración de Laravel API
+VITE_API_URL=http://127.0.0.1:8000/api
 
 # Configuración de la aplicación
 VITE_APP_NAME="Colegio Llamado"
 VITE_APP_ENV=local # Opciones: local, development, production
 ```
 
-> **Nota sobre APP_ENV**: 
-> - `local`: Permite acceso a todas las rutas sin restricciones de autenticación y roles. Útil para desarrollo local. **Importante:** Aunque estemos en modo local, la aplicación sigue conectándose a la base de datos Supabase definida en las variables de entorno.
-> - `development`: Aplica restricciones de autenticación y roles, pero con mensajes de depuración.
-> - `production`: Modo de producción con todas las restricciones activas y sin mensajes de depuración.
+4. Configurar el backend Laravel:
+```bash
+cd colegio-llamado-laravel
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan db:seed
+```
 
-4. Iniciar el servidor de desarrollo:
+5. Iniciar los servidores:
+
+Backend Laravel:
+```bash
+cd colegio-llamado-laravel
+php artisan serve
+```
+
+Frontend Vue.js (en otra terminal):
 ```bash
 npm run dev
 ```
@@ -63,16 +82,20 @@ npm run dev
 
 ```
 colegio-llamado/
-├── src/
-│   ├── assets/         # Recursos estáticos
-│   ├── components/     # Componentes Vue
-│   ├── views/          # Vistas principales
-│   ├── router/         # Configuración de rutas
-│   ├── stores/         # Estado global (Pinia)
-│   ├── seeders/        # Scripts de inicialización y migración
-│   └── supabase.js     # Configuración de Supabase
-├── public/             # Archivos públicos
-└── docs/              # Documentación
+├── src/                          # Frontend Vue.js
+│   ├── assets/                   # Recursos estáticos
+│   ├── components/               # Componentes Vue
+│   ├── views/                    # Vistas principales
+│   ├── router/                   # Configuración de rutas
+│   ├── stores/                   # Estado global (Pinia)
+│   └── services/                 # Servicios API
+├── colegio-llamado-laravel/      # Backend Laravel
+│   ├── app/                      # Aplicación Laravel
+│   ├── database/                 # Migraciones y seeders
+│   ├── routes/                   # Rutas API
+│   └── config/                   # Configuración
+├── public/                       # Archivos públicos
+└── docs/                         # Documentación
 ```
 
 ## Documentación
