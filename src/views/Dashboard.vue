@@ -139,7 +139,7 @@ import { useAuthStore } from '../stores/auth'
 import GeolocationStatus from '../components/GeolocationStatus.vue'
 import ChildrenList from '../components/ChildrenList.vue'
 import ScheduleInfo from '../components/ScheduleInfo.vue'
-import { supabase } from '../supabase'
+
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -168,21 +168,9 @@ onMounted(async () => {
     document.documentElement.classList.remove('dark')
   }
   
-  // Cargar el rol del usuario
+  // Cargar el rol del usuario desde el store
   if (authStore.user) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', authStore.user.id)
-        .single()
-
-      if (!error && data) {
-        userRole.value = data.role
-      }
-    } catch (err) {
-      console.error('Error al cargar rol del usuario:', err)
-    }
+    userRole.value = authStore.user?.rol || authStore.user?.role
   }
   
   // En entorno local, mostrar mensaje en la consola

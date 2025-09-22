@@ -84,7 +84,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-// import { supabase } from '../supabase' // Temporalmente comentado para migración a Laravel
+import { anuncioService } from '../services/anuncioService'
 import AnuncioMicrofono from '../components/AnuncioMicrofono.vue'
 
 const router = useRouter()
@@ -112,17 +112,9 @@ onMounted(async () => {
     return
   }
 
-  // Obtener el rol del usuario
+  // Obtener el rol del usuario desde el store
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', authStore.user.id)
-      .single()
-
-    if (!error && data) {
-      userRole.value = data.role
-    }
+    userRole.value = authStore.user?.rol || authStore.user?.role
 
     // Si no tiene permisos y no está en entorno local, redirigir después de 3 segundos
     if (!tienePermisos.value && !isLocalEnv.value) {

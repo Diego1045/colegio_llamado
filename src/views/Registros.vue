@@ -96,7 +96,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { supabase } from '../supabase'
+import { registroSalidaService } from '../services/registroSalidaService'
+import { estudiantesService } from '../services/estudiantesService'
 
 const authStore = useAuthStore()
 const registros = ref([])

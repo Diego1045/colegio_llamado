@@ -369,7 +369,10 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { supabase } from '../supabase'
+import { userService } from '../services/userService'
+import { authService } from '../services/authService'
+import { estadisticasService } from '../services/estadisticasService'
+import { codigoService } from '../services/codigoService'
 import { Chart } from 'chart.js/auto'
 
 const router = useRouter()
@@ -417,13 +420,7 @@ onUnmounted(() => {
 
 const cargarUsuarios = async () => {
   try {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    usuarios.value = data
+    usuarios.value = await userService.getUsers()
   } catch (error) {
     console.error('Error al cargar usuarios:', error)
   }
@@ -431,46 +428,15 @@ const cargarUsuarios = async () => {
 
 const cargarEstadisticas = async () => {
   try {
-    // Total de estudiantes
-    const { data: estudiantes, error: errorEstudiantes } = await supabase
-      .from('estudiantes')
-      .select('id', { count: 'exact' })
-
-    if (errorEstudiantes) throw errorEstudiantes
-    estadisticas.value.totalEstudiantes = estudiantes.length
-
-    // Llamadas de hoy
-    const hoy = new Date()
-    hoy.setHours(0, 0, 0, 0)
-    const { data: llamadas, error: errorLlamadas } = await supabase
-      .from('registros_salida')
-      .select('id', { count: 'exact' })
-      .gte('fecha_hora', hoy.toISOString())
-
-    if (errorLlamadas) throw errorLlamadas
-    estadisticas.value.llamadasHoy = llamadas.length
-
-    // Total de padres
-    const { data: padres, error: errorPadres } = await supabase
-      .from('usuarios')
-      .select('id', { count: 'exact' })
-      .eq('rol', 'padre')
-
-    if (errorPadres) throw errorPadres
-    estadisticas.value.totalPadres = padres.length
-
-    // Estadísticas de códigos
-    const { data: codigos, error: errorCodigos } = await supabase
-      .from('codigos_invitacion')
-      .select('estado', { count: 'exact' })
-      .group('estado')
-
-    if (errorCodigos) throw errorCodigos
-    codigos.forEach(codigo => {
-      if (codigo.estado === 'disponible') estadisticas.value.codigosDisponibles = codigo.count
-      if (codigo.estado === 'usado') estadisticas.value.codigosUsados = codigo.count
-      if (codigo.estado === 'invalido') estadisticas.value.codigosInvalidos = codigo.count
-    })
+    const stats = await estadisticasService.getEstadisticasGenerales()
+    estadisticas.value = {
+      totalEstudiantes: stats.totalEstudiantes || 0,
+      llamadasHoy: stats.llamadasHoy || 0,
+      totalPadres: stats.totalPadres || 0,
+      codigosDisponibles: stats.codigosDisponibles || 0,
+      codigosUsados: stats.codigosUsados || 0,
+      codigosInvalidos: stats.codigosInvalidos || 0
+    }
   } catch (error) {
     console.error('Error al cargar estadísticas:', error)
   }
@@ -478,13 +444,7 @@ const cargarEstadisticas = async () => {
 
 const cargarCodigos = async () => {
   try {
-    const { data, error } = await supabase
-      .from('codigos_invitacion')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    codigos.value = data
+    codigos.value = await codigoService.getCodigos()
   } catch (error) {
     console.error('Error al cargar códigos:', error)
   }
@@ -492,25 +452,7 @@ const cargarCodigos = async () => {
 
 const cargarLlamadasRecientes = async () => {
   try {
-    const { data, error } = await supabase
-      .from('registros_salida')
-      .select(`
-        id,
-        fecha_hora,
-        estado,
-        estudiantes (
-          nombre,
-          apellido
-        )
-      `)
-      .order('fecha_hora', { ascending: false })
-      .limit(5)
-
-    if (error) throw error
-    llamadasRecientes.value = data.map(llamada => ({
-      ...llamada,
-      estudiante_nombre: `${llamada.estudiantes.nombre} ${llamada.estudiantes.apellido}`
-    }))
+    llamadasRecientes.value = await estadisticasService.getLlamadasRecientes()
   } catch (error) {
     console.error('Error al cargar llamadas recientes:', error)
   }
@@ -518,37 +460,11 @@ const cargarLlamadasRecientes = async () => {
 
 const cargarDatosGraficos = async () => {
   try {
-    // Datos para gráfico de llamadas por día
-    const ultimos7Dias = Array.from({ length: 7 }, (_, i) => {
-      const fecha = new Date()
-      fecha.setDate(fecha.getDate() - i)
-      return fecha.toISOString().split('T')[0]
-    }).reverse()
-
-    const { data: llamadasPorDia, error: errorLlamadas } = await supabase
-      .from('registros_salida')
-      .select('fecha_hora')
-      .in('fecha_hora', ultimos7Dias)
-
-    if (errorLlamadas) throw errorLlamadas
-
-    const llamadasPorDiaCount = ultimos7Dias.map(fecha => {
-      return llamadasPorDia.filter(llamada => 
-        llamada.fecha_hora.startsWith(fecha)
-      ).length
-    })
-
-    // Datos para gráfico de estudiantes por grado
-    const { data: estudiantesPorGrado, error: errorEstudiantes } = await supabase
-      .from('estudiantes')
-      .select('grado', { count: 'exact' })
-      .group('grado')
-
-    if (errorEstudiantes) throw errorEstudiantes
-
-    // Crear gráficos
-    crearGraficoLlamadas(ultimos7Dias, llamadasPorDiaCount)
-    crearGraficoGrados(estudiantesPorGrado)
+    const datosGraficos = await estadisticasService.getDatosGraficos()
+    
+    // Crear gráficos con los datos de Laravel
+    crearGraficoLlamadas(datosGraficos.llamadasPorDia.labels, datosGraficos.llamadasPorDia.data)
+    crearGraficoGrados(datosGraficos.estudiantesPorGrado)
     crearGraficoCodigos()
   } catch (error) {
     console.error('Error al cargar datos para gráficos:', error)
@@ -667,12 +583,7 @@ const eliminarUsuario = async (usuario) => {
   if (!confirm('¿Estás seguro de que deseas eliminar este usuario?')) return
 
   try {
-    const { error } = await supabase
-      .from('usuarios')
-      .delete()
-      .eq('id', usuario.id)
-
-    if (error) throw error
+    await userService.deleteUser(usuario.id)
     await cargarUsuarios()
   } catch (error) {
     console.error('Error al eliminar usuario:', error)
@@ -684,46 +595,20 @@ const guardarUsuario = async () => {
   try {
     loading.value = true
     if (usuarioEditando.value) {
-      const { error } = await supabase
-        .from('usuarios')
-        .update({
-          nombre: formUsuario.value.nombre,
-          apellido: formUsuario.value.apellido,
-          email: formUsuario.value.email,
-          rol: formUsuario.value.rol,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', usuarioEditando.value.id)
-
-      if (error) throw error
-    } else {
-      const { data, error } = await supabase.auth.signUp({
+      await userService.updateUser(usuarioEditando.value.id, {
+        nombre: formUsuario.value.nombre,
+        apellido: formUsuario.value.apellido,
         email: formUsuario.value.email,
-        password: formUsuario.value.password,
-        options: {
-          data: {
-            nombre: formUsuario.value.nombre,
-            apellido: formUsuario.value.apellido,
-            rol: formUsuario.value.rol
-          }
-        }
+        rol: formUsuario.value.rol
       })
-
-      if (error) throw error
-
-      const { error: dbError } = await supabase
-        .from('usuarios')
-        .insert([
-          {
-            id: data.user.id,
-            nombre: formUsuario.value.nombre,
-            apellido: formUsuario.value.apellido,
-            email: formUsuario.value.email,
-            rol: formUsuario.value.rol
-          }
-        ])
-
-      if (dbError) throw dbError
+    } else {
+      await userService.createUser({
+        nombre: formUsuario.value.nombre,
+        apellido: formUsuario.value.apellido,
+        email: formUsuario.value.email,
+        rol: formUsuario.value.rol,
+        password: formUsuario.value.password
+      })
     }
 
     await cargarUsuarios()
@@ -769,24 +654,8 @@ const generarCodigo = () => {
 const generarCodigos = async () => {
   try {
     loadingCodigos.value = true
-    const nuevosCodigos = []
     
-    for (let i = 0; i < cantidadCodigos.value; i++) {
-      const codigo = generarCodigo()
-      const { error } = await supabase
-        .from('codigos_invitacion')
-        .insert([
-          {
-            codigo,
-            estado: 'disponible',
-            created_at: new Date().toISOString()
-          }
-        ])
-
-      if (error) throw error
-      nuevosCodigos.push(codigo)
-    }
-
+    await codigoService.generarCodigos(cantidadCodigos.value)
     await cargarCodigos()
     alert('Códigos generados exitosamente')
   } catch (error) {
@@ -811,12 +680,7 @@ const invalidarCodigo = async (codigo) => {
   if (!confirm('¿Estás seguro de que deseas invalidar este código?')) return
 
   try {
-    const { error } = await supabase
-      .from('codigos_invitacion')
-      .update({ estado: 'invalido' })
-      .eq('id', codigo.id)
-
-    if (error) throw error
+    await codigoService.invalidarCodigo(codigo.id)
     await cargarCodigos()
   } catch (error) {
     console.error('Error al invalidar código:', error)
@@ -843,37 +707,10 @@ const exportarReporte = async (tipo) => {
   try {
     let data, filename
     if (tipo === 'llamadas') {
-      const { data: llamadas, error } = await supabase
-        .from('registros_salida')
-        .select(`
-          fecha_hora,
-          estado,
-          estudiantes (
-            nombre,
-            apellido
-          )
-        `)
-        .order('fecha_hora', { ascending: false })
-
-      if (error) throw error
-      data = llamadas.map(llamada => ({
-        'Estudiante': `${llamada.estudiantes.nombre} ${llamada.estudiantes.apellido}`,
-        'Fecha': new Date(llamada.fecha_hora).toLocaleString(),
-        'Estado': llamada.estado
-      }))
+      data = await estadisticasService.generarReporteLlamadas()
       filename = 'reporte_llamadas.csv'
     } else {
-      const { data: codigos, error } = await supabase
-        .from('codigos_invitacion')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      data = codigos.map(codigo => ({
-        'Código': codigo.codigo,
-        'Estado': codigo.estado,
-        'Fecha de Generación': new Date(codigo.created_at).toLocaleString()
-      }))
+      data = await estadisticasService.generarReporteCodigos()
       filename = 'reporte_codigos.csv'
     }
 

@@ -331,7 +331,9 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { supabase } from '../supabase'
+import { userService } from '../services/userService'
+import { estudiantesService } from '../services/estudiantesService'
+import { padreEstudianteService } from '../services/padreEstudianteService'
 import { useToast } from 'vue-toastification'
 
 const toast = useToast()
@@ -389,28 +391,7 @@ watch(busquedaEstudiantes, () => {
 const cargarPadres = async () => {
   loading.value = true
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, nombre, apellido, role')
-      .eq('role', 'padre')
-    
-    if (error) throw error
-    
-    // Obtener los hijos de cada padre
-    const padresConHijos = []
-    for (const padre of data) {
-      const { data: relaciones, error: errorRelaciones } = await supabase
-        .from('padres_estudiantes')
-        .select('estudiante_id, estudiantes(id, nombre, apellido)')
-        .eq('padre_id', padre.id)
-      
-      if (!errorRelaciones) {
-        padre.hijos = relaciones.map(rel => rel.estudiantes)
-      }
-      padresConHijos.push(padre)
-    }
-    
-    padres.value = padresConHijos
+    padres.value = await userService.getPadres()
   } catch (error) {
     console.error('Error al cargar padres:', error)
     toast.error('Error al cargar la lista de padres')
@@ -427,27 +408,8 @@ const buscarPadres = async () => {
   
   loading.value = true
   try {
-    const query = busqueda.value.toLowerCase().trim()
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, nombre, apellido, role')
-      .eq('role', 'padre')
-      .or(`nombre.ilike.%${query}%,apellido.ilike.%${query}%,email.ilike.%${query}%`)
-    
-    if (error) throw error
-    
-    // Obtener los hijos de cada padre
-    const padresConHijos = []
-    for (const padre of data) {
-      const { data: relaciones, error: errorRelaciones } = await supabase
-        .from('padres_estudiantes')
-        .select('estudiante_id, estudiantes(id, nombre, apellido)')
-        .eq('padre_id', padre.id)
-      
-      if (!errorRelaciones) {
-        padre.hijos = relaciones.map(rel => rel.estudiantes)
-      }
-      padresConHijos.push(padre)
+    // Laravel manejará la búsqueda en el backend
+    padres.value = await userService.getPadres({ search: busqueda.value.trim() })
     }
     
     padres.value = padresConHijos
@@ -475,108 +437,27 @@ const guardarPadre = async () => {
   try {
     if (padreEditando.value) {
       // Actualizar padre existente
-      const { error } = await supabase
-        .from('users')
-        .update({
-          nombre: formPadre.value.nombre,
-          apellido: formPadre.value.apellido,
-          email: formPadre.value.email.trim().toLowerCase()
-        })
-        .eq('id', padreEditando.value.id)
+      await userService.updatePadre(padreEditando.value.id, {
+        nombre: formPadre.value.nombre,
+        apellido: formPadre.value.apellido,
+        email: formPadre.value.email.trim().toLowerCase()
+      })
       
-      if (error) throw error
       toast.success('Padre actualizado correctamente')
-      // Cerrar formulario y recargar datos
       mostrarFormulario.value = false
       await cargarPadres()
     } else {
-      // Normalizar el email
-      const emailNormalizado = formPadre.value.email.trim().toLowerCase()
-      
-      // Primero verificamos si el usuario ya existe en nuestra tabla users
-      const { data: existingUser, error: errorCheck } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', emailNormalizado)
-        .eq('role', 'padre')
-        .maybeSingle()
-        
-      if (errorCheck) {
-        console.error('Error al verificar usuario existente:', errorCheck)
-      }
-      
-      // Si ya existe en nuestra tabla users, mostrar error
-      if (existingUser) {
-        toast.error('Este email ya está registrado como padre en el sistema')
-        return
-      }
-      
-      // Intentamos crear el usuario en auth
-      const { data, error } = await supabase.auth.signUp({
-        email: emailNormalizado,
-        password: formPadre.value.password,
-        options: {
-          data: {
-            role: 'padre',
-            nombre: formPadre.value.nombre,
-            apellido: formPadre.value.apellido
-          }
-        }
+      // Crear nuevo padre
+      await userService.createPadre({
+        nombre: formPadre.value.nombre,
+        apellido: formPadre.value.apellido,
+        email: formPadre.value.email.trim().toLowerCase(),
+        password: formPadre.value.password
       })
       
-      console.log('Respuesta auth.signUp:', data, error)
-      
-      // Verificar si hay un error específico que indique que el usuario ya existe
-      if (error) {
-        if (error.code === 'user_already_exists') {
-          // Si el usuario ya existe en auth pero no en nuestra tabla
-          console.log('El usuario ya existe en auth pero no en tabla users')
-          
-          // Consultar directo al director para obtener el ID
-          // Esta sería la solución ideal, utilizando una función RPC en el servidor
-          // para obtener el ID a partir del email
-          toast.info('Este email ya está registrado en el sistema. Por favor, contacte al administrador para asociar este email a su cuenta de padre.')
-          
-          // Como alternativa, podríamos intentar que el usuario inicie sesión y
-          // luego capturar el ID para crear el registro de padre, pero esto requiere
-          // conocer la contraseña
-        } else {
-          // Otros errores
-          console.error('Error en auth.signUp:', error)
-          toast.error('Error al registrar: ' + error.message)
-        }
-        return
-      }
-      
-      // Si no hay error pero identities está vacío, el email ya existe
-      if (data && data.user && (!data.user.identities || data.user.identities.length === 0)) {
-        console.log('Email ya existe (identities vacío)')
-        toast.error('Este email ya está registrado en el sistema. Por favor, utilice otro email.')
-        return
-      }
-      
-      // Usuario creado correctamente, usar su ID
-      if (data && data.user) {
-        const userId = data.user.id
-        
-        try {
-          const { error: errorUsers } = await supabase
-            .from('users')
-            .insert([{
-              id: userId,
-              email: emailNormalizado,
-              nombre: formPadre.value.nombre,
-              apellido: formPadre.value.apellido,
-              role: 'padre'
-            }])
-          
-          if (errorUsers) throw errorUsers
-          
-          toast.success('Padre creado correctamente')
-          // Cerrar formulario y recargar datos
-          mostrarFormulario.value = false
-          await cargarPadres()
-        } catch (errorInsert) {
+      toast.success('Padre creado correctamente')
+      mostrarFormulario.value = false
+      await cargarPadres()
           console.error('Error al insertar en la tabla users:', errorInsert)
           toast.error('Error al guardar la información del padre en la base de datos')
         }
@@ -596,28 +477,7 @@ const eliminarPadre = async (padre) => {
   }
   
   try {
-    // Eliminar relaciones padre-estudiante
-    const { error: errorRelaciones } = await supabase
-      .from('padres_estudiantes')
-      .delete()
-      .eq('padre_id', padre.id)
-    
-    if (errorRelaciones) throw errorRelaciones
-    
-    // Eliminar usuario de la tabla users
-    const { error } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', padre.id)
-    
-    if (error) throw error
-    
-    // Eliminar usuario de autenticación
-    const { error: errorAuth } = await supabase.auth.admin.deleteUser(padre.id)
-    if (errorAuth) {
-      console.error('Error al eliminar usuario de autenticación:', errorAuth)
-      // No interrumpimos el flujo si falla la eliminación en auth
-    }
+    await userService.deletePadre(padre.id)
     
     toast.success('Padre eliminado correctamente')
     await cargarPadres()
@@ -633,14 +493,7 @@ const asignarHijos = async (padre) => {
   loadingHijos.value = true
   
   try {
-    // Cargar hijos asignados
-    const { data: relaciones, error: errorRelaciones } = await supabase
-      .from('padres_estudiantes')
-      .select('estudiantes(id, nombre, apellido, grado, seccion)')
-      .eq('padre_id', padre.id)
-    
-    if (errorRelaciones) throw errorRelaciones
-    hijosAsignados.value = relaciones.map(rel => rel.estudiantes)
+    hijosAsignados.value = await padreEstudianteService.getHijosAsignados(padre.id)
     hijosAsignadosFiltrados.value = [...hijosAsignados.value]
   } catch (error) {
     console.error('Error al cargar relaciones:', error)
@@ -665,14 +518,7 @@ const filtrarHijosAsignados = () => {
 
 const asignarHijo = async (estudiante) => {
   try {
-    const { error } = await supabase
-      .from('padres_estudiantes')
-      .insert([{
-        padre_id: padreSelecionado.value.id,
-        estudiante_id: estudiante.id
-      }])
-    
-    if (error) throw error
+    await padreEstudianteService.asignarHijo(padreSelecionado.value.id, estudiante.id)
     
     // Actualizar la lista de hijos asignados
     hijosAsignados.value.push(estudiante)
@@ -693,13 +539,7 @@ const asignarHijo = async (estudiante) => {
 
 const desasignarHijo = async (hijo) => {
   try {
-    const { error } = await supabase
-      .from('padres_estudiantes')
-      .delete()
-      .eq('padre_id', padreSelecionado.value.id)
-      .eq('estudiante_id', hijo.id)
-    
-    if (error) throw error
+    await padreEstudianteService.desasignarHijo(padreSelecionado.value.id, hijo.id)
     
     // Actualizar las listas
     hijosAsignados.value = hijosAsignados.value.filter(h => h.id !== hijo.id)
@@ -715,46 +555,12 @@ const desasignarHijo = async (hijo) => {
 const guardarHijo = async () => {
   loadingGuardarHijo.value = true
   try {
-    // Verificar si ya existe un estudiante con los mismos datos
-    const { data: estudiantesExistentes, error: errorBusqueda } = await supabase
-      .from('estudiantes')
-      .select('id')
-      .eq('nombre', formHijo.value.nombre)
-      .eq('apellido', formHijo.value.apellido)
-      .eq('grado', formHijo.value.grado)
-      .eq('seccion', formHijo.value.seccion)
-    
-    if (errorBusqueda) throw errorBusqueda
-    
-    // Si ya existe un estudiante con estos datos, mostrar error
-    if (estudiantesExistentes && estudiantesExistentes.length > 0) {
-      toast.error('Ya existe un estudiante con estos datos')
-      return
-    }
-    
-    // Insertar nuevo estudiante
-    const { data: nuevoEstudiante, error } = await supabase
-      .from('estudiantes')
-      .insert([{
-        nombre: formHijo.value.nombre,
-        apellido: formHijo.value.apellido,
-        grado: formHijo.value.grado,
-        seccion: formHijo.value.seccion
-      }])
-      .select()
-    
-    if (error) throw error
-    
-    // Asignar inmediatamente al padre
-    const estudiante = nuevoEstudiante[0]
-    const { error: errorRelacion } = await supabase
-      .from('padres_estudiantes')
-      .insert([{
-        padre_id: padreSelecionado.value.id,
-        estudiante_id: estudiante.id
-      }])
-    
-    if (errorRelacion) throw errorRelacion
+    const estudiante = await padreEstudianteService.crearYAsignarHijo(padreSelecionado.value.id, {
+      nombre: formHijo.value.nombre,
+      apellido: formHijo.value.apellido,
+      grado: formHijo.value.grado,
+      seccion: formHijo.value.seccion
+    })
     
     // Actualizar la lista de hijos asignados
     hijosAsignados.value.push(estudiante)
