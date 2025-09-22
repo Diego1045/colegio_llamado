@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { supabase } from '../supabase'
 import LoginForm from '../components/LoginForm.vue'
 import { useSEO } from '../composables/useSEO'
 
@@ -169,26 +168,21 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
-  // Obtener el rol del usuario desde la tabla users
+  // Verificar rol del usuario
   if (authStore.user && to.meta.role) {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', authStore.user.id)
-        .single()
-
-      if (!error && data) {
-        // Verificar si el rol del usuario coincide con el requerido por la ruta
-        if (data.role === to.meta.role) {
+      const userRole = authStore.user.role
+      
+      // Verificar si el rol del usuario coincide con el requerido por la ruta
+      if (userRole === to.meta.role) {
+        next()
+        return
+      }
+      
+      // Para rutas que requieren admin o docente (como anuncios)
+      if (to.meta.role === 'admin' && to.path === '/anuncios') {
+        if (userRole === 'admin' || userRole === 'docente') {
           next()
-          return
-        }
-        
-        // Para rutas que requieren admin o docente (como anuncios)
-        if (to.meta.role === 'admin' && to.path === '/anuncios') {
-          if (data.role === 'admin' || data.role === 'docente') {
-            next()
             return
           }
         }

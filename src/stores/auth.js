@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { auth } from '../supabase'
+import { authService } from '../services/authService.js'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -12,11 +12,14 @@ export const useAuthStore = defineStore('auth', {
     async initialize() {
       try {
         this.loading = true
-        const { user, error } = await auth.getCurrentUser()
-        if (error) throw error
-        this.user = user
+        if (authService.hasValidToken()) {
+          const user = await authService.getCurrentUser()
+          this.user = user
+        }
       } catch (err) {
         this.error = err.message
+        // Si hay error, limpiar token
+        authService.logout()
       } finally {
         this.loading = false
       }
@@ -25,24 +28,27 @@ export const useAuthStore = defineStore('auth', {
     async signIn(email, password) {
       try {
         this.loading = true
-        const { data, error } = await auth.signIn(email, password)
-        if (error) throw error
+        this.error = null
+        const data = await authService.login(email, password)
         this.user = data.user
+        return data
       } catch (err) {
         this.error = err.message
+        throw err
       } finally {
         this.loading = false
       }
     },
 
-    async signUp(email, password) {
+    async signUp(userData) {
       try {
         this.loading = true
-        const { data, error } = await auth.signUp(email, password)
-        if (error) throw error
-        this.user = data.user
+        this.error = null
+        const data = await authService.register(userData)
+        return data
       } catch (err) {
         this.error = err.message
+        throw err
       } finally {
         this.loading = false
       }
@@ -51,8 +57,7 @@ export const useAuthStore = defineStore('auth', {
     async signOut() {
       try {
         this.loading = true
-        const { error } = await auth.signOut()
-        if (error) throw error
+        await authService.logout()
         this.user = null
       } catch (err) {
         this.error = err.message
@@ -61,16 +66,22 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async resetPassword(email) {
+    async validateCode(code) {
       try {
         this.loading = true
-        const { error } = await auth.resetPassword(email)
-        if (error) throw error
+        this.error = null
+        const data = await authService.validateInvitationCode(code)
+        return data
       } catch (err) {
         this.error = err.message
+        throw err
       } finally {
         this.loading = false
       }
+    },
+
+    clearError() {
+      this.error = null
     }
   },
 
@@ -78,6 +89,7 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.user,
     isLoading: (state) => state.loading,
     getError: (state) => state.error,
-    isAdmin: (state) => state.user?.user_metadata?.role === 'admin'
+    isAdmin: (state) => state.user?.role === 'admin',
+    isPadre: (state) => state.user?.role === 'padre'
   }
 }) 

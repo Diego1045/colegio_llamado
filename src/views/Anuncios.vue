@@ -84,7 +84,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { supabase } from '../supabase'
+// import { supabase } from '../supabase' // Temporalmente comentado para migración a Laravel
 import AnuncioMicrofono from '../components/AnuncioMicrofono.vue'
 
 const router = useRouter()
